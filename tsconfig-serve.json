@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "module": "commonjs",
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "node",
@@ -18,6 +19,9 @@
   },
   "files": [
     "main.ts"
+  ],
+  "include": [
+    "main-process/**/*.ts"
   ],
   "exclude": [
     "node_modules",

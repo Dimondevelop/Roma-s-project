@@ -1,14 +1,16 @@
-import { app, BrowserWindow, screen } from 'electron';
+import { app, BrowserWindow, screen as electronScreen } from 'electron';
+import { Client } from '@elastic/elasticsearch';
 import * as path from 'path';
 import * as url from 'url';
+import * as glob from "glob";
 
-let win: BrowserWindow = null;
+const client = new Client({ node: 'http://localhost:9200' });
+export let win: BrowserWindow = null;
 const args = process.argv.slice(1),
     serve = args.some(val => val === '--serve');
 
 function createWindow(): BrowserWindow {
 
-  const electronScreen = screen;
   const size = electronScreen.getPrimaryDisplay().workAreaSize;
 
   // Create the browser window.
@@ -51,7 +53,13 @@ function createWindow(): BrowserWindow {
   return win;
 }
 
+function require_main_process (): void {
+  const files = glob.sync(path.join(__dirname, 'main-process/**/*.js'));
+  files.forEach((file) => { require(file) })
+}
+
 try {
+  require_main_process();
 
   app.allowRendererProcessReuse = true;
 
@@ -76,6 +84,12 @@ try {
       createWindow();
     }
   });
+
+  // ipcMain.on('reindex', (event, arg) => {
+  //   const files = fs.readdirSync(__dirname);
+  //   win.webContents.send('reindexResponse', files);
+  //   // event.sender.send('reindexResponse', files);
+  // });
 
 } catch (e) {
   // Catch Error

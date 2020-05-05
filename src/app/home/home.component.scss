@@ -1,16 +1,22 @@
 .container {
-  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
 
-  background: url(../../assets/background.jpg) no-repeat center fixed;
-  -webkit-background-size: cover; /* pour anciens Chrome et Safari */
-  background-size: cover; /* version standardisée */
+  //background: url(../../assets/background.jpg) no-repeat center fixed;
+  //-webkit-background-size: cover; /* pour anciens Chrome et Safari */
+  //background-size: cover; /* version standardisée */
+
+  background: #4b4b4b;
 
   .title {
     color: white;
     margin: 0;
     padding: 50px 20px;
+  }
+
+  pre {
+    color: white;
   }
 }

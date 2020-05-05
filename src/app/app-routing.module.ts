@@ -1,17 +1,12 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { PageNotFoundComponent } from './shared/components';
+import { TestComponent } from "./test/test.component";
 
 const routes: Routes = [
-  {
-    path: '',
-    redirectTo: 'home',
-    pathMatch: 'full'
-  },
-  {
-    path: '**',
-    component: PageNotFoundComponent
-  }
+  { path: '', redirectTo: 'home', pathMatch: 'full' },
+  { path: 'test', component: TestComponent },
+  { path: '**', component: PageNotFoundComponent },
 ];
 
 @NgModule({

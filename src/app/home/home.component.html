@@ -2,4 +2,10 @@
   <h1 class="title">
     {{ 'PAGES.HOME.TITLE' | translate }}
   </h1>
+
+  <button [disabled]="isReindexing" (click)="reindex()">Почати переіндексацію!</button>
+  <a routerLink="/test">Go to test</a>
+  <div class="list">
+    <pre>{{filesList | json}}</pre>
+  </div>
 </div>
