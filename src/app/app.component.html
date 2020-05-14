@@ -1,1 +1,13 @@
-<router-outlet></router-outlet>
+<nb-layout>
+  <nb-layout-header class="main-header" fixed>
+    <h1>{{selectedItem?.title}}</h1> <nb-icon class="header-icon" *ngIf="selectedItem?.icon" [icon]="selectedItem.icon"></nb-icon>
+  </nb-layout-header>
+
+  <nb-sidebar>
+    <nb-menu tag="menu" [items]="menuItems"></nb-menu>
+  </nb-sidebar>
+
+  <nb-layout-column>
+    <router-outlet></router-outlet>
+  </nb-layout-column>
+</nb-layout>

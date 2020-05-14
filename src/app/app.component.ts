@@ -1,19 +1,45 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ElectronService } from './core/services';
 import { TranslateService } from '@ngx-translate/core';
 import { AppConfig } from '../environments/environment';
+import { NbMenuService } from '@nebular/theme';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import {NbMenuItem} from '@nebular/theme/components/menu/menu.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements OnInit, OnDestroy {
+  menuItems = [
+    {
+      title: 'Антиплагіат',
+      icon: 'search-outline',
+      link: '/home',
+      home: true,
+    },
+    {
+      title: 'Архів',
+      icon: 'archive-outline',
+      link: '/archive',
+    },
+    {
+      title: 'Налаштування',
+      icon: 'settings-2-outline',
+      link: '/settings',
+    }
+  ]
+  private destroy$ = new Subject<void>();
+  selectedItem: NbMenuItem;
   constructor(
     public electronService: ElectronService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private menuService: NbMenuService
   ) {
-    translate.setDefaultLang('uk');
+    translate.setDefaultLang('uk')
+
     console.log('AppConfig', AppConfig);
 
     if (electronService.isElectron) {
@@ -24,5 +50,21 @@ export class AppComponent {
     } else {
       console.log('Mode web');
     }
+  }
+
+
+  ngOnInit(): void {
+    this.getSelectedItem();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  getSelectedItem() {
+    this.menuService.onItemSelect().subscribe((menuBag) => {
+      this.selectedItem = menuBag.item;
+    })
   }
 }

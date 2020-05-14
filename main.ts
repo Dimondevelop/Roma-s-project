@@ -50,6 +50,9 @@ function createWindow(): BrowserWindow {
     win = null;
   });
 
+  !serve && win.setMenuBarVisibility(false)
+
+
   return win;
 }
 

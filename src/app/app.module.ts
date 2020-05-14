@@ -14,10 +14,23 @@ import { AppRoutingModule } from './app-routing.module';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
+// Nebular
+import {
+  NbThemeModule,
+  NbSidebarModule,
+  NbMenuModule,
+  NbLayoutModule,
+  NbButtonModule,
+  NbIconModule
+} from '@nebular/theme';
+
 import { HomeModule } from './home/home.module';
 
 import { AppComponent } from './app.component';
 import { TestComponent } from './test/test.component';
+import { NbEvaIconsModule } from '@nebular/eva-icons';
+import { ArchiveComponent } from './pages/archive/archive.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
@@ -28,6 +41,7 @@ export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
   declarations: [
     AppComponent,
     TestComponent,
+    ArchiveComponent,
   ],
   imports: [
     BrowserModule,
@@ -37,6 +51,14 @@ export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
     SharedModule,
     HomeModule,
     AppRoutingModule,
+    NbEvaIconsModule,
+    NbThemeModule.forRoot({ name: 'default' }),
+    NbSidebarModule.forRoot(),
+    NbMenuModule.forRoot(),
+    NbLayoutModule,
+    NbButtonModule,
+    NbIconModule,
+    BrowserAnimationsModule,
     TranslateModule.forRoot({
       loader: {
         provide: TranslateLoader,

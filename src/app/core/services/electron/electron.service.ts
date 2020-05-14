@@ -30,5 +30,46 @@ export class ElectronService {
       this.childProcess = window.require('child_process');
       this.fs = window.require('fs');
     }
+
+    if ((<any>window).require) {
+      try {
+        this.ipcRenderer = (<any>window).require('electron').ipcRenderer
+      } catch (error) {
+        throw error
+      }
+    } else {
+      console.warn('Could not load electron ipc')
+    }
+  }
+
+  init() {
+    console.log('OnInitService');
+    this.ipcRenderer.on('ipcLog', (event, args: { message }) => {
+      console.log(args.message);
+    });
+  }
+
+  async reindex(): Promise<{}> {
+    return new Promise<string[]>((resolve) => {
+      this.ipcRenderer.once('reindexResponse', (event, arg) => {
+        resolve(arg);
+      });
+      this.ipcRenderer.send('reindex');
+    });
+  }
+
+  async search(text): Promise<{}> {
+    return new Promise<[]>((resolve) => {
+      this.ipcRenderer.once('searchResults', (event, arg) => {
+        console.log({arg});
+        resolve(arg);
+      });
+      this.ipcRenderer.send('search', { text });
+    });
+  }
+
+  destroy() {
+    console.log('OnDestroyService');
+    this.ipcRenderer.removeAllListeners('ipcLog')
   }
 }

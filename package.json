@@ -2,10 +2,7 @@
   "name": "angular-electron",
   "version": "7.0.3",
   "description": "Angular 9 with Electron (Typescript + SASS + Hot Reload)",
-  "author": {
-    "name": "Dmytro Petrashchuk",
-    "email": "dimon.develop@gmail.com"
-  },
+  "author": "Dmytro Petrashchuk <dimon.develop@gmail.com>",
   "keywords": [
     "angular",
     "angular 9",
@@ -53,6 +50,7 @@
     "@angular/router": "9.1.1",
     "@ngx-translate/core": "12.1.2",
     "@ngx-translate/http-loader": "4.0.0",
+    "@schematics/angular": "9.1.4",
     "@types/jasmine": "3.5.10",
     "@types/jasminewd2": "2.0.8",
     "@types/mocha": "7.0.2",
@@ -91,8 +89,25 @@
     "node": ">=10.13.0"
   },
   "dependencies": {
+    "@angular/animations": "9.1.4",
+    "@angular/cdk": "9.2.2",
     "@elastic/elasticsearch": "7.6.1",
+    "@nebular/eva-icons": "5.0.0",
+    "@nebular/theme": "5.0.0",
+    "bootstrap": "4.4.1",
     "doxtract": "1.0.13",
-    "glob": "7.1.6"
-  }
+    "eva-icons": "1.1.3",
+    "glob": "7.1.6",
+    "nebular-icons": "1.1.0",
+    "ngx-bootstrap": "5.6.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dimondevelop/Roma-s-project.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dimondevelop/Roma-s-project/issues"
+  },
+  "homepage": "https://github.com/Dimondevelop/Roma-s-project#readme"
 }

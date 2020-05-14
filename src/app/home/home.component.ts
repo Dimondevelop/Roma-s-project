@@ -1,5 +1,14 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FileService } from '../file.service';
+import { ElectronService } from '../core/services/electron/electron.service';
+
+interface SearchResult {
+  _index: string;
+  _type: string;
+  _id: string;
+  _score: number;
+  _source: { name: string, full_text: string }
+  highlight: { full_text: string[]}
+}
 
 @Component({
   selector: 'app-home',
@@ -8,25 +17,40 @@ import { FileService } from '../file.service';
 })
 export class HomeComponent implements OnInit, OnDestroy {
   filesList: any;
+  searchResults: SearchResult[];
   isReindexing = false;
-  constructor(private fileService: FileService) { }
+  isSearching = false;
+  textArea: string;
+  constructor(private electronService: ElectronService) { }
 
   ngOnInit(): void {
-    this.fileService.init();
+    this.electronService.init();
   }
 
   ngOnDestroy(): void {
-    this.fileService.destroy();
+    this.electronService.destroy();
   }
 
   reindex() {
     this.isReindexing = true;
     console.log({isReindexing: this.isReindexing});
-    this.fileService.reindex().then((response) => {
+    this.electronService.reindex().then((response) => {
       this.filesList = response;
       this.isReindexing = false;
       console.log('then', {isReindexing: this.isReindexing});
     });
   }
 
+  search(text) {
+    if (!text.trim()) return;
+
+    console.log({text});
+
+    this.isSearching = true;
+    this.electronService.search(text).then((response: { results: SearchResult[] }) => {
+      this.searchResults = response.results;
+      console.log({searchResults: this.searchResults});
+      this.isSearching = false;
+    });
+  }
 }
