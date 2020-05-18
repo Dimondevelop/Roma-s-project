@@ -68,6 +68,16 @@ export class ElectronService {
     });
   }
 
+  async testSearchRequest(text): Promise<{}> {
+    return new Promise<[]>((resolve) => {
+      this.ipcRenderer.once('testSearchResults', (event, arg) => {
+        console.log({arg});
+        resolve(arg);
+      });
+      this.ipcRenderer.send('testSearch', { text });
+    });
+  }
+
   destroy() {
     console.log('OnDestroyService');
     this.ipcRenderer.removeAllListeners('ipcLog')

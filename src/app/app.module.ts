@@ -21,7 +21,7 @@ import {
   NbMenuModule,
   NbLayoutModule,
   NbButtonModule,
-  NbIconModule
+  NbIconModule, NbInputModule, NbSpinnerModule
 } from '@nebular/theme';
 
 import { HomeModule } from './home/home.module';
@@ -59,6 +59,8 @@ export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
     NbButtonModule,
     NbIconModule,
     BrowserAnimationsModule,
+    NbSpinnerModule,
+    NbInputModule,
     TranslateModule.forRoot({
       loader: {
         provide: TranslateLoader,

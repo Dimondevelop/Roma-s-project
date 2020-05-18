@@ -29,6 +29,11 @@ export class AppComponent implements OnInit, OnDestroy {
       title: 'Налаштування',
       icon: 'settings-2-outline',
       link: '/settings',
+    },
+    {
+      title: 'Тестування запитів',
+      icon: 'info-outline',
+      link: '/test',
     }
   ]
   private destroy$ = new Subject<void>();

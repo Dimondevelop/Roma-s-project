@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ElectronService } from '../core/services/electron/electron.service';
+import { ElectronService } from '../core/services';
 
 interface SearchResult {
   _index: string;

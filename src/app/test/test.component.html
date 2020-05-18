@@ -1,2 +1,25 @@
-<p>test works!</p>
-<a routerLink="/home">Go to home</a>
+<div style="display: flex; margin-left: 150px">
+  <div class="flex-center direction-column">
+    <label>Текст для пошуку (тестова версія)
+      <textarea [(ngModel)]="requestArea" rows="10" nbInput fullWidth shape="round" placeholder="Text Area"></textarea>
+    </label>
+    <button nbButton status="primary" outline
+            [nbSpinner]="isSearching" [class.no-pointer]="isSearching" nbSpinnerStatus="basic" nbSpinnerSize="medium"
+            [disabled]="!requestArea" (click)="testSearchRequest(requestArea)">Шукати</button>
+  </div>
+  <div style="margin-left: 50px; margin-top: -20px">
+    <h3>Example</h3>
+    <pre>
+    {{'{'}}
+      "query": {{'{'}}
+        "match": {{'{'}} "full_text": "" {{'}'}}
+      {{'}'}},
+      "highlight": {{'{'}}
+        "fields": {{'{'}}
+          "full_text": {{'{}'}}
+        {{'}'}}
+      {{'}'}}
+    {{'}'}}
+    </pre>
+  </div>
+</div>

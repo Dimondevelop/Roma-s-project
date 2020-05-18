@@ -84,4 +84,27 @@ function search(text) {
         });
     });
 }
+electron_1.ipcMain.on('testSearch', function (event, arg) {
+    var sender = event.sender;
+    testSearchRequest(arg.request).then(function (results) {
+        sender.send('ipcLog', { message: { results: results } });
+        sender.send('testSearchResults', { results: results });
+    }).catch(function (err) { throw err; });
+});
+function testSearchRequest(jsonRequest) {
+    return __awaiter(this, void 0, void 0, function () {
+        var body;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, indexing_1.client.search({
+                        index: 'docx',
+                        body: jsonRequest
+                    })];
+                case 1:
+                    body = (_a.sent()).body;
+                    return [2 /*return*/, body.hits.hits];
+            }
+        });
+    });
+}
 //# sourceMappingURL=search.js.map

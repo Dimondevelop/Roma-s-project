@@ -42,3 +42,21 @@ async function search(text) {
   //   // console.log(hit);
   // })
 }
+
+ipcMain.on('testSearch', (event, arg: { request }) => {
+  const { sender } = event
+
+  testSearchRequest(arg.request).then((results) => {
+    sender.send('ipcLog', { message: { results } })
+    sender.send('testSearchResults', { results })
+  }).catch((err) => { throw err })
+})
+
+async function testSearchRequest(jsonRequest) {
+  const { body } = await client.search({
+    index: 'docx',
+    body: jsonRequest
+  })
+
+  return body.hits.hits
+}
