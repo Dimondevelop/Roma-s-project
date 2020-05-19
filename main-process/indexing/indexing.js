@@ -43,17 +43,22 @@ var glob_1 = require("glob");
 var doxtract_1 = require("doxtract");
 var elasticsearch_1 = require("@elastic/elasticsearch");
 var HttpGetQueue_1 = require("./HttpGetQueue");
+var main_1 = require("../../main");
 exports.client = new elasticsearch_1.Client({ node: 'http://localhost:9200' });
 var sub;
-// ipcMain.on('open-file-dialog', (event) => {
-//   dialog.showOpenDialog({
-//     properties: ['openFile', 'openDirectory']
-//   }, (files) => {
-//     if (files) {
-//       event.sender.send('selected-directory', files)
-//     }
-//   })
-// })
+// const { webContents } = win
+electron_1.ipcMain.on('changeIndexingDirectory', function (event) {
+    electron_1.dialog.showOpenDialog(main_1.win, {
+        defaultPath: path_1.join(__dirname, '/../../documents'),
+        properties: ['openDirectory']
+    }).then(function (files) {
+        main_1.win.webContents.send('ipcLog', { message: { files: files, message: 'OpenDialogReturnValue' } });
+        if (files) {
+            event.sender.send('selectedDirectory', files);
+            main_1.win.webContents.send('ipcLog', { message: { files: files, message: 'if' } });
+        }
+    });
+});
 electron_1.ipcMain.on('reindex', function (event, arg) {
     var sender = event.sender;
     // note const documents_dir = join(__dirname, '/../../../../documents') /*for build*/
@@ -63,43 +68,28 @@ electron_1.ipcMain.on('reindex', function (event, arg) {
             throw err; });
     }
     var files = glob_1.sync(path_1.join(documents_dir, '*.docx'));
-    deleteAll(sender);
+    deleteAll();
     createIndex().then(function () {
-        indexAll(files, sender).then(function () {
-            console.log('All documents EXTRACTED!');
+        indexAll(files).then(function () {
             sender.send('ipcLog', { message: 'All documents EXTRACTED' });
         }).catch(function (err) { throw err; });
     });
-    // win.webContents.send('reindexResponse', files)
 });
 function createIndex() {
     return __awaiter(this, void 0, void 0, function () {
-        var stopwords;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0:
-                    stopwords = ["якщо", "саме", "які", "авжеж", "адже", "б", "без", "був", "була", "були", "було", "бути", "більш", "вам", "вас", "весь", "вздовж", "ви", "вниз", "внизу", "вона", "вони", "воно", "все", "всередині", "всіх", "від", "він", "да", "давай", "давати", "де", "дещо", "для", "до", "з", "завжди", "замість", "й", "коли", "ледве", "майже", "ми", "навколо", "навіть", "нам", "от", "отже", "отож", "поза", "про", "під", "так", "такий", "також", "те", "ти", "тобто", "тощо", "хоча", "це", "цей", "чого", "який", "якої", "є", "із", "інших", "їх", "її", "на", "по", "би", "ніби", "наче", "зате", "проте", "тому", "щоб", "аби", "бо", "ще", "або", "та", "в", "що", "і", "у", "яка", "за", "ж", "а", "не", "то", "того", "чи", "як", "при", "яких", "тут", "свої", "має", "кожен", "його", "слід", "будь-якого", "така", "всі", "між", "цієї"];
-                    return [4 /*yield*/, exports.client.indices.create({
-                            index: 'docx',
-                            body: {
-                                "settings": {
-                                    "analysis": {
-                                        "analyzer": {
-                                            "my_analyzer": {
-                                                "type": "standard",
-                                                "stopwords": stopwords
-                                            }
-                                        }
-                                    }
-                                },
-                                "mappings": {
-                                    properties: {
-                                        "name": { "type": "keyword" },
-                                        "full_text": { "type": "text", "analyzer": "my_analyzer" }
-                                    }
+                case 0: return [4 /*yield*/, exports.client.indices.create({
+                        index: 'docx',
+                        body: {
+                            "mappings": {
+                                properties: {
+                                    "name": { "type": "keyword" },
+                                    "full_text": { "type": "text" }
                                 }
                             }
-                        })];
+                        }
+                    }, { ignore: [400] })];
                 case 1:
                     _a.sent();
                     return [2 /*return*/];
@@ -107,7 +97,7 @@ function createIndex() {
         });
     });
 }
-function indexAll(files, sender) {
+function indexAll(files) {
     return __awaiter(this, void 0, void 0, function () {
         var length, instance, i;
         return __generator(this, function (_a) {
@@ -116,13 +106,11 @@ function indexAll(files, sender) {
                     length = files.length - 1;
                     instance = new HttpGetQueue_1.HttpGetQueue(exports.client);
                     sub = instance.results.subscribe(function (res) {
-                        console.log(res);
-                        sender.send('ipcLog', { message: res });
+                        main_1.win.webContents.send('ipcLog', { message: res });
                         if (res.count >= files.length) {
-                            console.log('files.length', files.length, 'res.count', res.count);
                             sub.unsubscribe();
-                            sender.send('reindexResponse', { files: files });
-                            sender.send('ipcLog', { message: 'files.length: ' + files.length + ' res.count: ' + res.count });
+                            main_1.win.webContents.send('reindexResponse', { files: files });
+                            main_1.win.webContents.send('ipcLog', { message: 'files.length: ' + files.length + ' res.count: ' + res.count });
                         }
                     });
                     _a.label = 1;
@@ -182,7 +170,7 @@ function separatedExtract(i, length, files) {
         });
     });
 }
-function deleteAll(sender) {
+function deleteAll() {
     exports.client.indices.delete({
         index: '_all'
     }, function (err, res) {
@@ -190,8 +178,7 @@ function deleteAll(sender) {
             throw err.message;
         }
         else {
-            console.log('All indexes have been deleted!');
-            sender.send('ipcLog', { message: 'All indexes have been deleted!' });
+            main_1.win.webContents.send('ipcLog', { message: 'All indexes have been deleted!' });
         }
     });
 }

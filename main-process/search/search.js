@@ -41,68 +41,61 @@ var electron_1 = require("electron");
 var indexing_1 = require("../indexing/indexing");
 electron_1.ipcMain.on('search', function (event, arg) {
     var sender = event.sender;
-    search(arg.text).then(function (results) {
+    search(separate(arg.text)).then(function (results) {
         console.log(results);
         sender.send('ipcLog', { message: { results: results } });
         sender.send('searchResults', { results: results });
     }).catch(function (err) { throw err; });
     main_1.win.webContents.send('ipcLog', { message: 'OnSearch emit' });
 });
+function separate(text) {
+    var removeRN = /[\r\n]/gm;
+    var regexp = /(.{500}|.+$)([\u0400-\u04FF\S]|\w)*/gm;
+    return text.replace(removeRN, ' ').match(regexp);
+}
 function search(text) {
     return __awaiter(this, void 0, void 0, function () {
-        var body;
+        var queries, _i, text_1, str, body;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, indexing_1.client.search({
-                        index: 'docx',
-                        body: {
-                            "query": {
-                                "match": { "full_text": text }
-                                // "match" : {
-                                //   "full_text" : {
-                                //     "query" : text,
-                                //     "operator" : "and"
-                                //   }
-                                // }
-                            },
-                            "highlight": {
-                                "fields": {
-                                    "full_text": {}
+                case 0:
+                    queries = [];
+                    for (_i = 0, text_1 = text; _i < text_1.length; _i++) {
+                        str = text_1[_i];
+                        queries.push({ "match": { "query": str } });
+                    }
+                    return [4 /*yield*/, indexing_1.client.search({
+                            index: 'docx',
+                            body: {
+                                "_source": "name",
+                                "query": {
+                                    "intervals": {
+                                        "full_text": {
+                                            "any_of": {
+                                                "intervals": queries
+                                            }
+                                        }
+                                    }
+                                    // "match" : { "full_text" : text }
+                                    /*        "match" : {
+                                              "full_text" : { "query" : text, "operator" : "and" }
+                                            }*/
+                                },
+                                "highlight": {
+                                    "fields": {
+                                        "full_text": {}
+                                    }
                                 }
                             }
-                        }
-                    })];
+                        })];
                 case 1:
                     body = (_a.sent()).body;
                     return [2 /*return*/, body.hits.hits
                         // hits.forEach((hit) => {
                         //   console.log({document: hit._source.name, score: hit._score, highlight: hit.highlight})
-                        //   // console.log(hit);
+                        //   // console.log(hit)
                         // })
                     ];
-            }
-        });
-    });
-}
-electron_1.ipcMain.on('testSearch', function (event, arg) {
-    var sender = event.sender;
-    testSearchRequest(arg.request).then(function (results) {
-        sender.send('ipcLog', { message: { results: results } });
-        sender.send('testSearchResults', { results: results });
-    }).catch(function (err) { throw err; });
-});
-function testSearchRequest(jsonRequest) {
-    return __awaiter(this, void 0, void 0, function () {
-        var body;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, indexing_1.client.search({
-                        index: 'docx',
-                        body: jsonRequest
-                    })];
-                case 1:
-                    body = (_a.sent()).body;
-                    return [2 /*return*/, body.hits.hits];
             }
         });
     });

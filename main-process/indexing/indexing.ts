@@ -1,24 +1,29 @@
 import { Subscription } from "rxjs"
-import { ipcMain, app } from "electron";
+import { ipcMain, dialog, app } from "electron"
 import { existsSync, mkdir } from "fs"
 import { join, parse } from "path"
 import { sync } from "glob"
 import { extractText } from "doxtract"
 import { Client } from "@elastic/elasticsearch"
-import { HttpGetQueue } from './HttpGetQueue';
+import { HttpGetQueue } from './HttpGetQueue'
+import { win } from '../../main';
 
 export const client = new Client({ node: 'http://localhost:9200' })
-let sub: Subscription;
+let sub: Subscription
+// const { webContents } = win
 
-// ipcMain.on('open-file-dialog', (event) => {
-//   dialog.showOpenDialog({
-//     properties: ['openFile', 'openDirectory']
-//   }, (files) => {
-//     if (files) {
-//       event.sender.send('selected-directory', files)
-//     }
-//   })
-// })
+ipcMain.on('changeIndexingDirectory', (event) => {
+  dialog.showOpenDialog(win, {
+    defaultPath: join(__dirname, '/../../documents'), /*join(__dirname, '/../../../../documents')*/ /*for build*/
+    properties: ['openDirectory']
+  }).then((files) => {
+    win.webContents.send('ipcLog', {message: {files, message: 'OpenDialogReturnValue'}})
+    if (files) {
+      event.sender.send('selectedDirectory', files)
+      win.webContents.send('ipcLog', {message: {files, message: 'if'}})
+    }
+  })
+})
 
 ipcMain.on('reindex', (event, arg) => {
   const { sender } = event
@@ -27,54 +32,39 @@ ipcMain.on('reindex', (event, arg) => {
   if (!existsSync(documents_dir)) {
     mkdir(documents_dir, (err) => {if (err) throw err})
   }
-  const files = sync(join(documents_dir, '*.docx'))
+  const files: string[] = sync(join(documents_dir, '*.docx'))
 
-  deleteAll(sender)
+  deleteAll()
   createIndex().then(() => {
-    indexAll(files, sender).then(() => {
-      console.log('All documents EXTRACTED!')
+    indexAll(files).then(() => {
       sender.send('ipcLog', { message: 'All documents EXTRACTED' })
     }).catch((err) => { throw err })
   })
-  // win.webContents.send('reindexResponse', files)
 })
 
 async function createIndex() {
-  const stopwords = ["якщо","саме","які","авжеж","адже","б","без","був","була","були","було","бути","більш","вам","вас","весь","вздовж","ви","вниз","внизу","вона","вони","воно","все","всередині","всіх","від","він","да","давай","давати","де","дещо","для","до","з","завжди","замість","й","коли","ледве","майже","ми","навколо","навіть","нам","от","отже","отож","поза","про","під","так","такий","також","те","ти","тобто","тощо","хоча","це","цей","чого","який","якої","є","із","інших","їх","її","на","по","би","ніби","наче","зате","проте","тому","щоб","аби","бо","ще","або","та","в","що","і","у","яка","за","ж","а","не","то","того","чи","як","при","яких","тут","свої","має","кожен","його","слід","будь-якого","така","всі","між","цієї"];
   await client.indices.create({
     index: 'docx',
     body: {
-      "settings": {
-        "analysis": {
-          "analyzer": {
-            "my_analyzer": {
-              "type": "standard",
-              "stopwords": stopwords
-            }
-          }
-        }
-      },
       "mappings": {
         properties: {
           "name":  { "type": "keyword" },
-          "full_text":  { "type": "text", "analyzer": "my_analyzer" }
+          "full_text":  { "type": "text" }
         }
       }
     }
-  }, /*{ ignore: [400] }*/)
+  }, { ignore: [400] })
 }
 
-async function indexAll(files, sender) {
+async function indexAll(files: string[]) {
   let length = files.length - 1
   const instance = new HttpGetQueue(client)
   sub = instance.results.subscribe((res) => {
-    console.log(res)
-    sender.send('ipcLog', {message: res})
+    win.webContents.send('ipcLog', {message: res})
     if (res.count >= files.length) {
-      console.log('files.length', files.length, 'res.count', res.count);
       sub.unsubscribe()
-      sender.send('reindexResponse', {files})
-      sender.send('ipcLog', {message: 'files.length: ' + files.length + ' res.count: ' + res.count})
+      win.webContents.send('reindexResponse', {files})
+      win.webContents.send('ipcLog', {message: 'files.length: ' + files.length + ' res.count: ' + res.count})
     }
   })
   while (length > 0) {
@@ -103,15 +93,14 @@ async function separatedExtract(i: number, length: number, files: string[]) {
 
 
 
-function deleteAll(sender) {
+function deleteAll() {
   client.indices.delete({
     index: '_all'
   }, function(err, res) {
     if (err) {
       throw err.message
     } else {
-      console.log('All indexes have been deleted!')
-      sender.send('ipcLog', { message: 'All indexes have been deleted!' })
+      win.webContents.send('ipcLog', { message: 'All indexes have been deleted!' })
     }
   })
 }

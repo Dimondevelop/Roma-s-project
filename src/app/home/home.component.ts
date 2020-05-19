@@ -18,9 +18,10 @@ interface SearchResult {
 export class HomeComponent implements OnInit, OnDestroy {
   filesList: any;
   searchResults: SearchResult[];
-  isReindexing = false;
-  isSearching = false;
-  textArea: string;
+  private isReindexing = false;
+  private isSearching = false;
+  private textArea: string;
+
   constructor(private electronService: ElectronService) { }
 
   ngOnInit(): void {
@@ -41,16 +42,25 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
-  search(text) {
-    if (!text.trim()) return;
-
-    console.log({text});
+  search(): void {
+    if (!this.textArea.trim()) return;
 
     this.isSearching = true;
-    this.electronService.search(text).then((response: { results: SearchResult[] }) => {
+    this.electronService.search(this.textArea).then((response: { results: SearchResult[] }) => {
       this.searchResults = response.results;
-      console.log({searchResults: this.searchResults});
       this.isSearching = false;
     });
+  }
+
+  changeIndexingDirectory() {
+    this.electronService.changeIndexingDirectory().then((data) => {
+      console.log({data});
+    })
+  }
+
+  chooseFiles() {
+    this.electronService.chooseFiles().then((data) => {
+      console.log({data});
+    })
   }
 }

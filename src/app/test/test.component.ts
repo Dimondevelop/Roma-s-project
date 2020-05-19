@@ -1,15 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import { Subscription, Subject} from "rxjs";
-import { ElectronService } from '../core/services';
-
-interface SearchResult {
-  _index: string;
-  _type: string;
-  _id: string;
-  _score: number;
-  _source: { name: string, full_text: string }
-  highlight: { full_text: string[]}
-}
+import { Component, OnInit } from '@angular/core'
+import { Subscription, Subject} from "rxjs"
+import { ElectronService } from '../core/services'
 
 @Component({
   selector: 'app-test',
@@ -19,9 +10,9 @@ interface SearchResult {
 export class TestComponent implements OnInit {
   sub: Subscription
   stream: Subject<void> = new Subject<void>()
-  requestArea: string
-  searchResults: SearchResult[]
-  isSearching = false
+  isProcess: boolean = false
+  textArea: string
+  separatedText: RegExpMatchArray
 
   constructor(private electronService: ElectronService) {
     this.sub = this.stream.subscribe((value => {
@@ -33,23 +24,12 @@ export class TestComponent implements OnInit {
     this.sub.unsubscribe()
   }
 
-  ngOnInit(): void {
-  }
+  ngOnInit(): void { }
 
-  testSearchRequest(request) {
-    if (!request.trim()) return;
+  separate() {
+    const removeRN = /[\r\n]/gm
+    const regexp = /(.{500}|.+$)([\u0400-\u04FF\S]|\w)*/gm
 
-    try {
-      request = JSON.parse(request)
-    } catch (e) {
-      this.isSearching = false
-      throw e;
-    }
-
-    this.isSearching = true
-    this.electronService.testSearchRequest(request).then((response: { results: SearchResult[] }) => {
-      this.searchResults = response.results
-      this.isSearching = false
-    });
+    this.separatedText = this.textArea.replace(removeRN, ' ').match(regexp)
   }
 }

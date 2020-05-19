@@ -1,2 +1,3 @@
-export * from './em-to-strong.pipe';
-export * from './safe.pipe';
+export { EmToStrongPipe } from './em-to-strong.pipe';
+export { SafePipe } from './safe.pipe';
+export { TrimPipe } from './trim.pipe';

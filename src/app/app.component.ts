@@ -15,7 +15,7 @@ import {NbMenuItem} from '@nebular/theme/components/menu/menu.service';
 export class AppComponent implements OnInit, OnDestroy {
   menuItems = [
     {
-      title: 'Антиплагіат',
+      title: 'Пошук Дублікатів',
       icon: 'search-outline',
       link: '/home',
       home: true,

@@ -49,6 +49,24 @@ export class ElectronService {
     });
   }
 
+  async chooseFiles(): Promise<{}> {
+    return new Promise<string[]>((resolve) => {
+      this.ipcRenderer.once('selectedFiles', (event, arg) => {
+        resolve(arg);
+      });
+      this.ipcRenderer.send('chooseSearchDocuments');
+    });
+  }
+
+  async changeIndexingDirectory(): Promise<{}> {
+    return new Promise<string[]>((resolve) => {
+      this.ipcRenderer.once('selectedDirectory', (event, arg) => {
+        resolve(arg);
+      });
+      this.ipcRenderer.send('changeIndexingDirectory');
+    });
+  }
+
   async reindex(): Promise<{}> {
     return new Promise<string[]>((resolve) => {
       this.ipcRenderer.once('reindexResponse', (event, arg) => {
@@ -65,16 +83,6 @@ export class ElectronService {
         resolve(arg);
       });
       this.ipcRenderer.send('search', { text });
-    });
-  }
-
-  async testSearchRequest(text): Promise<{}> {
-    return new Promise<[]>((resolve) => {
-      this.ipcRenderer.once('testSearchResults', (event, arg) => {
-        console.log({arg});
-        resolve(arg);
-      });
-      this.ipcRenderer.send('testSearch', { text });
     });
   }
 
