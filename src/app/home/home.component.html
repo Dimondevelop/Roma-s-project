@@ -1,40 +1,46 @@
-<button
+<button class="margin-10"
   nbTooltip="Будьте обережні! Ця дія видалить всі документи з наявної бази даних та розпочне нове сканування та індексацію документів в обраному архіві."
   nbTooltipStatus="danger" nbTooltipPlacement="bottom" nbButton [status]="isReindexing ? 'basic' :'danger'" outline
   size="large"
   [nbSpinner]="isReindexing" [class.no-pointer]="isReindexing" nbSpinnerStatus="danger" nbSpinnerSize="large"
   (click)="reindex()">Почати переіндексацію!
 </button>
+<button class="margin-10" nbButton status="primary" outline (click)="changeIndexingDirectory()">Обрати папку</button>
 <div class="list">
   <pre>{{filesList | json}}</pre>
 </div>
 
 <nb-card>
-  <nb-card-header>Пошук Дублікатів (тестовий)</nb-card-header>
+  <nb-card-header>Пошук Дублікатів</nb-card-header>
   <nb-card-body>
-    <div class="flex-center direction-column">
-      <label>Текст для пошуку (тестова версія)
-        <textarea [(ngModel)]="textArea" rows="10" nbInput fullWidth shape="round" placeholder="Text Area"></textarea>
-      </label>
-      <button nbButton outline size="giant" [status]="isSearching ? 'basic' : 'info'"
-              [nbSpinner]="isSearching" [class.no-pointer]="isSearching" nbSpinnerStatus="info" nbSpinnerSize="large"
-              [disabled]="!(textArea | trim)" (click)="search()">Шукати
-      </button>
-    </div>
+<!--    <div class="flex-center direction-column">-->
+<!--      <label>Текст для пошуку (тестова версія)-->
+<!--        <textarea [(ngModel)]="textArea" rows="10" nbInput fullWidth shape="round" placeholder="Text Area"></textarea>-->
+<!--      </label>-->
+<!--      <button nbButton outline size="giant" [status]="isSearching ? 'basic' : 'info'"-->
+<!--              [nbSpinner]="isSearching" [class.no-pointer]="isSearching" nbSpinnerStatus="info" nbSpinnerSize="large"-->
+<!--              [disabled]="!(textArea | trim)" (click)="search()">Шукати-->
+<!--      </button>-->
+<!--    </div>-->
     <div class="flex-center">
       <button class="margin-10" nbButton status="success" outline (click)="chooseFiles()">Обрати файли</button>
-      <button class="margin-10" nbButton status="primary" outline (click)="changeIndexingDirectory()">Обрати папку</button>
     </div>
     <br>
-    <div *ngIf="searchResults">
-      <div *ngFor="let result of searchResults">
-        <div class="result-title"><h5>{{result?._source?.name}}</h5>
-          <span>&nbsp;&nbsp;&nbsp;Кількість балів: {{result._score | number:'1.0-2'}}</span></div>
-        <div *ngFor="let highlight of result?.highlight?.full_text; index as i">
-          <p><strong>{{i + 1}}. </strong> ...<span [innerHTML]="highlight | emToStrong"></span>...</p>
-        </div>
-      </div>
-    </div>
+    <nb-tabset *ngIf="searchResults" class="results-tabset">
+      <nb-tab *ngFor="let results of searchResults; first as isFirst" [active]="isFirst" tabTitle="{{results.name}}">
+        <ng-container [ngSwitch]="results.document.length">
+          <h5 *ngSwitchCase="0">Дублікатів не знайдено!</h5>
+          <ng-container *ngSwitchDefault>
+            <div *ngFor="let result of results.document">
+              <div class="result-title"><h5>{{result?._source?.name}}</h5>
+                <span>&nbsp;&nbsp;&nbsp;Кількість балів: {{result._score | number:'1.0-2'}}</span></div>
+              <div *ngFor="let highlight of result?.highlight?.full_text; index as i">
+                <p><strong>{{i + 1}}. </strong> ...<span [innerHTML]="highlight | emToStrong"></span>...</p>
+              </div>
+            </div>
+          </ng-container>
+        </ng-container>
+      </nb-tab>
+    </nb-tabset>
   </nb-card-body>
 </nb-card>
-

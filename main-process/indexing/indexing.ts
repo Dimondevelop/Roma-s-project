@@ -1,12 +1,12 @@
-import { Subscription } from "rxjs"
 import { ipcMain, dialog, app } from "electron"
+import { win } from '../../main'
+import { Subscription } from "rxjs"
 import { existsSync, mkdir } from "fs"
 import { join, parse } from "path"
 import { sync } from "glob"
 import { extractText } from "doxtract"
 import { Client } from "@elastic/elasticsearch"
 import { HttpGetQueue } from './HttpGetQueue'
-import { win } from '../../main';
 
 export const client = new Client({ node: 'http://localhost:9200' })
 let sub: Subscription
@@ -56,9 +56,40 @@ async function createIndex() {
   }, { ignore: [400] })
 }
 
-async function indexAll(files: string[]) {
+async function sendRequest (client, dataset) {
+  win.webContents.send('ipcLog', {message: {client, dataset}})
+  const body = dataset.flatMap((doc) => [{index: {_index: 'docx'}}, doc])
+  let bulkResponse = { errors: null, items: [] }
+  await client.bulk({ refresh: 'true', body }).then((data) => {
+    bulkResponse = data.body
+  }).catch((error) => {
+    console.error(error)
+  })
+
+  if (bulkResponse.errors) {
+    const erroredDocuments = []
+    bulkResponse.items.forEach((action, i) => {
+      const operation = Object.keys(action)[0]
+      if (action[operation].error) {
+        erroredDocuments.push({
+          status: action[operation].status,
+          error: action[operation].error,
+          operation: body[i * 2],
+          document: body[i * 2 + 1]
+        })
+      }
+    })
+    console.log(erroredDocuments)
+    throw erroredDocuments
+  }
+
+  const { body: count } = await client.count({index: 'docx'})
+  return count
+}
+
+async function indexAll(files: string[]): Promise<void> {
   let length = files.length - 1
-  const instance = new HttpGetQueue(client)
+  const instance = new HttpGetQueue(sendRequest, client)
   sub = instance.results.subscribe((res) => {
     win.webContents.send('ipcLog', {message: res})
     if (res.count >= files.length) {
@@ -76,7 +107,7 @@ async function indexAll(files: string[]) {
   }
 }
 
-async function separatedExtract(i: number, length: number, files: string[]) {
+async function separatedExtract(i, length, files: string[]): Promise<{ name: string, "full_text": string }[]> {
   const dataset = []
   for (; i > length && i >= 0; i--) {
     const name = parse(files[i]).name

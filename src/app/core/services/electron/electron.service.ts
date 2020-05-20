@@ -51,7 +51,11 @@ export class ElectronService {
 
   async chooseFiles(): Promise<{}> {
     return new Promise<string[]>((resolve) => {
-      this.ipcRenderer.once('selectedFiles', (event, arg) => {
+      // this.ipcRenderer.once('selectedFiles', (event, arg) => {
+      //   resolve(arg);
+      // });
+      this.ipcRenderer.once('searchResults', (event, arg) => {
+        console.log({arg});
         resolve(arg);
       });
       this.ipcRenderer.send('chooseSearchDocuments');
@@ -89,5 +93,9 @@ export class ElectronService {
   destroy() {
     console.log('OnDestroyService');
     this.ipcRenderer.removeAllListeners('ipcLog')
+  }
+
+  appQuit() {
+    this.ipcRenderer.send('app-quit');
   }
 }

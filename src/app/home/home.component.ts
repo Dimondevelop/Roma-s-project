@@ -17,7 +17,7 @@ interface SearchResult {
 })
 export class HomeComponent implements OnInit, OnDestroy {
   filesList: any;
-  searchResults: SearchResult[];
+  searchResults: { document: SearchResult[], name: string }[];
   private isReindexing = false;
   private isSearching = false;
   private textArea: string;
@@ -47,7 +47,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     this.isSearching = true;
     this.electronService.search(this.textArea).then((response: { results: SearchResult[] }) => {
-      this.searchResults = response.results;
+      this.searchResults[0].document = response.results;
       this.isSearching = false;
     });
   }
@@ -59,8 +59,13 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   chooseFiles() {
-    this.electronService.chooseFiles().then((data) => {
-      console.log({data});
+    this.isSearching = true;
+    this.electronService.chooseFiles().then((response: { results: { document: SearchResult[], name: string }[] } ) => {
+      console.log(response);
+      response && (this.searchResults = response.results);
+      this.isSearching = false;
+    }).catch(() => {
+      this.isSearching = false;
     })
   }
 }

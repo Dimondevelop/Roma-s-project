@@ -72,4 +72,8 @@ export class AppComponent implements OnInit, OnDestroy {
       this.selectedItem = menuBag.item;
     })
   }
+
+  appQuit() {
+    this.electronService.appQuit();
+  }
 }

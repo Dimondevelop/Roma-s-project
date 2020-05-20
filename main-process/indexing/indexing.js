@@ -37,13 +37,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var electron_1 = require("electron");
+var main_1 = require("../../main");
 var fs_1 = require("fs");
 var path_1 = require("path");
 var glob_1 = require("glob");
 var doxtract_1 = require("doxtract");
 var elasticsearch_1 = require("@elastic/elasticsearch");
 var HttpGetQueue_1 = require("./HttpGetQueue");
-var main_1 = require("../../main");
 exports.client = new elasticsearch_1.Client({ node: 'http://localhost:9200' });
 var sub;
 // const { webContents } = win
@@ -97,6 +97,46 @@ function createIndex() {
         });
     });
 }
+function sendRequest(client, dataset) {
+    return __awaiter(this, void 0, void 0, function () {
+        var body, bulkResponse, erroredDocuments_1, count;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    main_1.win.webContents.send('ipcLog', { message: { client: client, dataset: dataset } });
+                    body = dataset.flatMap(function (doc) { return [{ index: { _index: 'docx' } }, doc]; });
+                    bulkResponse = { errors: null, items: [] };
+                    return [4 /*yield*/, client.bulk({ refresh: 'true', body: body }).then(function (data) {
+                            bulkResponse = data.body;
+                        }).catch(function (error) {
+                            console.error(error);
+                        })];
+                case 1:
+                    _a.sent();
+                    if (bulkResponse.errors) {
+                        erroredDocuments_1 = [];
+                        bulkResponse.items.forEach(function (action, i) {
+                            var operation = Object.keys(action)[0];
+                            if (action[operation].error) {
+                                erroredDocuments_1.push({
+                                    status: action[operation].status,
+                                    error: action[operation].error,
+                                    operation: body[i * 2],
+                                    document: body[i * 2 + 1]
+                                });
+                            }
+                        });
+                        console.log(erroredDocuments_1);
+                        throw erroredDocuments_1;
+                    }
+                    return [4 /*yield*/, client.count({ index: 'docx' })];
+                case 2:
+                    count = (_a.sent()).body;
+                    return [2 /*return*/, count];
+            }
+        });
+    });
+}
 function indexAll(files) {
     return __awaiter(this, void 0, void 0, function () {
         var length, instance, i;
@@ -104,7 +144,7 @@ function indexAll(files) {
             switch (_a.label) {
                 case 0:
                     length = files.length - 1;
-                    instance = new HttpGetQueue_1.HttpGetQueue(exports.client);
+                    instance = new HttpGetQueue_1.HttpGetQueue(sendRequest, exports.client);
                     sub = instance.results.subscribe(function (res) {
                         main_1.win.webContents.send('ipcLog', { message: res });
                         if (res.count >= files.length) {

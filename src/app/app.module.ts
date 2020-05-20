@@ -16,12 +16,12 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
 // Nebular
 import {
-  NbThemeModule,
-  NbSidebarModule,
-  NbMenuModule,
-  NbLayoutModule,
-  NbButtonModule,
-  NbIconModule, NbInputModule, NbSpinnerModule
+    NbThemeModule,
+    NbSidebarModule,
+    NbMenuModule,
+    NbLayoutModule,
+    NbButtonModule,
+    NbIconModule, NbInputModule, NbSpinnerModule, NbTooltipModule
 } from '@nebular/theme';
 
 import { HomeModule } from './home/home.module';
@@ -43,32 +43,33 @@ export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
     TestComponent,
     ArchiveComponent,
   ],
-  imports: [
-    BrowserModule,
-    FormsModule,
-    HttpClientModule,
-    CoreModule,
-    SharedModule,
-    HomeModule,
-    AppRoutingModule,
-    NbEvaIconsModule,
-    NbThemeModule.forRoot({ name: 'default' }),
-    NbSidebarModule.forRoot(),
-    NbMenuModule.forRoot(),
-    NbLayoutModule,
-    NbButtonModule,
-    NbIconModule,
-    BrowserAnimationsModule,
-    NbSpinnerModule,
-    NbInputModule,
-    TranslateModule.forRoot({
-      loader: {
-        provide: TranslateLoader,
-        useFactory: HttpLoaderFactory,
-        deps: [HttpClient]
-      }
-    })
-  ],
+    imports: [
+        BrowserModule,
+        FormsModule,
+        HttpClientModule,
+        CoreModule,
+        SharedModule,
+        HomeModule,
+        AppRoutingModule,
+        NbEvaIconsModule,
+        NbThemeModule.forRoot({name: 'default'}),
+        NbSidebarModule.forRoot(),
+        NbMenuModule.forRoot(),
+        NbLayoutModule,
+        NbButtonModule,
+        NbIconModule,
+        BrowserAnimationsModule,
+        NbSpinnerModule,
+        NbInputModule,
+        TranslateModule.forRoot({
+            loader: {
+                provide: TranslateLoader,
+                useFactory: HttpLoaderFactory,
+                deps: [HttpClient]
+            }
+        }),
+        NbTooltipModule
+    ],
   providers: [],
   bootstrap: [AppComponent]
 })

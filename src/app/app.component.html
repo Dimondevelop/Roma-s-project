@@ -1,6 +1,7 @@
 <nb-layout>
   <nb-layout-header class="main-header" fixed>
     <h1>{{selectedItem?.title}}</h1> <nb-icon class="header-icon" *ngIf="selectedItem?.icon" [icon]="selectedItem.icon"></nb-icon>
+    <button class="app-quit" nbTooltip="Закрити програму" status="danger" nbButton (click)="appQuit()"><nb-icon icon="close"></nb-icon></button>
   </nb-layout-header>
 
   <nb-sidebar>

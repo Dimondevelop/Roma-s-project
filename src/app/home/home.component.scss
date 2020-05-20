@@ -1,4 +1,11 @@
 .result-title {
   display: flex;
   line-height: 32px;
+
+  h5 {
+    max-width: 85%;
+    text-align: center;
+  }
 }
+
+

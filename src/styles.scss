@@ -6,6 +6,11 @@ html, body {
   height: 100%;
 }
 
+.tabset {
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
 .flex-center {
   display: flex;
   justify-content: center;

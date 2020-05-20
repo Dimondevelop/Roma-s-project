@@ -3,4 +3,13 @@
 }
 .main-header {
   -webkit-app-region: drag;
+
+  button {
+    -webkit-app-region: no-drag;
+  }
+
+  .app-quit {
+    margin-left: auto;
+    color: white;
+  }
 }

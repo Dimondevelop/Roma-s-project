@@ -1,27 +1,36 @@
 import { win } from "../../main"
-import { ipcMain, app } from "electron"
+import { ipcMain, dialog, app } from "electron"
+import { extractText } from "doxtract"
+import { parse } from "path"
 
 import { client } from '../indexing/indexing'
+import { Subscription } from 'rxjs';
+import {HttpGetQueue} from '../indexing/HttpGetQueue';
+
+let sub: Subscription
 
 ipcMain.on('search', (event, arg: { text: string }) => {
   const { sender } = event
 
-  search(separate(arg.text)).then((results) => {
-    console.log(results)
+  const separatedText = separate(arg.text, 500);
+  search(client, {document: separatedText, name: 'textArea'}).then((results) => {
     sender.send('ipcLog', { message: { results } })
-    sender.send('searchResults', { results })
+    sender.send('searchResults', { results: results.results })
   }).catch((err) => { throw err })
   win.webContents.send('ipcLog', { message: 'OnSearch emit' })
 })
 
-function separate(text: string): RegExpMatchArray {
+function separate(text: string, count: number): RegExpMatchArray {
   const removeRN = /[\r\n]/gm
-  const regexp = /(.{500}|.+$)([\u0400-\u04FF\S]|\w)*/gm
+  // const regexp = /(.{500}|.+$)([\u0400-\u04FF\S]|\w)*/gm
+  const regexp = new RegExp(`(.{${count}}|.+$)([\u0400-\u04FF\\S]|\\w)*`, 'gm')
 
-  return text.replace(removeRN, ' ').match(regexp)
+  const separatedText = text.replace(removeRN, ' ').match(regexp)
+  console.log(separatedText)
+  return separatedText
 }
 
-async function search(text: RegExpMatchArray) {
+async function search(client, { document: text, name }): Promise<{results: SearchResult[], name: string}> {
   const queries = []
   for (let str of text) {
     queries.push({"match": {"query": str}})
@@ -52,7 +61,7 @@ async function search(text: RegExpMatchArray) {
     }
   })
 
-  return body.hits.hits
+  return {results: body.hits.hits, name}
 
   // hits.forEach((hit) => {
   //   console.log({document: hit._source.name, score: hit._score, highlight: hit.highlight})
@@ -60,3 +69,72 @@ async function search(text: RegExpMatchArray) {
   // })
 }
 
+ipcMain.on('chooseSearchDocuments', (event) => {
+  dialog.showOpenDialog(win, {
+    title: 'Оберіть файли для пошуку',
+    properties: ['openFile', 'multiSelections']
+  }).then(({ canceled, filePaths}) => {
+    if (canceled) {
+      event.sender.send('searchResults', false)
+      return
+    }
+    if (filePaths.length) {
+      extractDocuments(filePaths).then((extractedDocuments: ExtractedDocument[] ) => {
+        getMultipleResults(extractedDocuments).then((results: { document: SearchResult[], name: string }[]) => {
+          win.webContents.send('searchResults', { results })
+          sub.unsubscribe()
+        })
+
+      })
+
+      // event.sender.send('selectedFiles', files)
+    }
+  })
+})
+
+async function getMultipleResults(extractedDocuments: ExtractedDocument[]) {
+  const searchResults: { document: SearchResult[], name: string }[] = [];
+  const instance = new HttpGetQueue(search, client)
+  let i = 0
+  return await new Promise((resolve) => {
+    sub = instance.results.subscribe(({results, name}) => {
+      i++
+      win.webContents.send('ipcLog', {message: {res: {results, name}, log: 'ipc'}})
+      searchResults.push({document: results, name});
+      if (i === extractedDocuments.length) {
+        resolve(searchResults)
+      }
+    })
+
+    for (const exDoc of extractedDocuments) {
+      instance.addToQueue(exDoc)
+      // await search(client, exDoc).then(({results, name}) => {
+      //   searchResults.push({document: results, name: name});
+      // }).catch((err) => {
+      //   throw err
+      // })
+    }
+  })
+
+}
+
+async function extractDocuments(documents: string[]):Promise<ExtractedDocument[]> {
+  const extractedDocuments: { document: RegExpMatchArray, name: string }[] = []
+  for (let doc of documents) {
+    await extractText(doc).then((text) => {
+      extractedDocuments.push({document: separate(text, 500), name: parse(doc).name});
+    }).catch((err) => { throw err })
+  }
+  return extractedDocuments;
+}
+
+interface SearchResult {
+  _index: string;
+  _type: string;
+  _id: string;
+  _score: number;
+  _source: { name: string, full_text: string }
+  highlight: { full_text: string[]}
+}
+
+interface ExtractedDocument { document: RegExpMatchArray, name: string }
