@@ -40,13 +40,13 @@ var main_1 = require("../../main");
 var electron_1 = require("electron");
 var doxtract_1 = require("doxtract");
 var path_1 = require("path");
-var indexing_1 = require("../indexing/indexing");
+var main_2 = require("../../main");
 var HttpGetQueue_1 = require("../indexing/HttpGetQueue");
 var sub;
 electron_1.ipcMain.on('search', function (event, arg) {
     var sender = event.sender;
     var separatedText = separate(arg.text, 500);
-    search(indexing_1.client, { document: separatedText, name: 'textArea' }).then(function (results) {
+    search(main_2.client, { document: separatedText, name: 'textArea' }).then(function (results) {
         sender.send('ipcLog', { message: { results: results } });
         sender.send('searchResults', { results: results.results });
     }).catch(function (err) { throw err; });
@@ -111,6 +111,7 @@ function search(client, _a) {
 electron_1.ipcMain.on('chooseSearchDocuments', function (event) {
     electron_1.dialog.showOpenDialog(main_1.win, {
         title: 'Оберіть файли для пошуку',
+        buttonLabel: 'Шукати',
         properties: ['openFile', 'multiSelections']
     }).then(function (_a) {
         var canceled = _a.canceled, filePaths = _a.filePaths;
@@ -136,7 +137,7 @@ function getMultipleResults(extractedDocuments) {
             switch (_a.label) {
                 case 0:
                     searchResults = [];
-                    instance = new HttpGetQueue_1.HttpGetQueue(search, indexing_1.client);
+                    instance = new HttpGetQueue_1.HttpGetQueue(search, main_2.client);
                     i = 0;
                     return [4 /*yield*/, new Promise(function (resolve) {
                             sub = instance.results.subscribe(function (_a) {
@@ -151,11 +152,6 @@ function getMultipleResults(extractedDocuments) {
                             for (var _i = 0, extractedDocuments_1 = extractedDocuments; _i < extractedDocuments_1.length; _i++) {
                                 var exDoc = extractedDocuments_1[_i];
                                 instance.addToQueue(exDoc);
-                                // await search(client, exDoc).then(({results, name}) => {
-                                //   searchResults.push({document: results, name: name});
-                                // }).catch((err) => {
-                                //   throw err
-                                // })
                             }
                         })];
                 case 1: return [2 /*return*/, _a.sent()];

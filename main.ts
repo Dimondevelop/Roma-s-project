@@ -4,10 +4,10 @@ import * as path from 'path'
 import * as url from 'url'
 import * as glob from "glob"
 
-const client = new Client({ node: 'http://localhost:9200' })
 export let win: BrowserWindow = null
-const args = process.argv.slice(1),
-    serve = args.some(val => val === '--serve')
+export const args = process.argv.slice(1),
+    serve = args.some(val => val === '--serve'),
+    client = new Client({ node: 'http://localhost:9200' })
 
 function createWindow(): BrowserWindow {
 
@@ -22,7 +22,7 @@ function createWindow(): BrowserWindow {
     frame: false,
     webPreferences: {
       nodeIntegration: true,
-      allowRunningInsecureContent: (serve) ? true : false,
+      allowRunningInsecureContent: !!serve,
     },
   })
 
@@ -81,12 +81,9 @@ try {
     }
   })
 
-
   ipcMain.on('app-quit', (event, arg) => {
     app.quit()
   })
-
-
 
   app.on('activate', () => {
     // On OS X it's common to re-create a window in the app when the

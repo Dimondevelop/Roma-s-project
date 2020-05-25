@@ -1,20 +1,23 @@
 import { ipcMain, dialog, app } from "electron"
-import { win } from '../../main'
+import { win, client, serve } from '../../main'
 import { Subscription } from "rxjs"
 import { existsSync, mkdir } from "fs"
 import { join, parse } from "path"
 import { sync } from "glob"
 import { extractText } from "doxtract"
-import { Client } from "@elastic/elasticsearch"
 import { HttpGetQueue } from './HttpGetQueue'
-
-export const client = new Client({ node: 'http://localhost:9200' })
 let sub: Subscription
+let documents_dir: string;
+if (serve) {
+  documents_dir = join(__dirname, '/../../documents') /*for dev*/
+} else {
+  documents_dir = join(__dirname, '/../../../../documents') /*for build*/
+}
 // const { webContents } = win
 
 ipcMain.on('changeIndexingDirectory', (event) => {
   dialog.showOpenDialog(win, {
-    defaultPath: join(__dirname, '/../../documents'), /*join(__dirname, '/../../../../documents')*/ /*for build*/
+    defaultPath: documents_dir,
     properties: ['openDirectory']
   }).then((files) => {
     win.webContents.send('ipcLog', {message: {files, message: 'OpenDialogReturnValue'}})
@@ -27,8 +30,6 @@ ipcMain.on('changeIndexingDirectory', (event) => {
 
 ipcMain.on('reindex', (event, arg) => {
   const { sender } = event
-  // note const documents_dir = join(__dirname, '/../../../../documents') /*for build*/
-  const documents_dir = join(__dirname, '/../../documents') /*for dev*/
   if (!existsSync(documents_dir)) {
     mkdir(documents_dir, (err) => {if (err) throw err})
   }
@@ -63,7 +64,7 @@ async function sendRequest (client, dataset) {
   await client.bulk({ refresh: 'true', body }).then((data) => {
     bulkResponse = data.body
   }).catch((error) => {
-    console.error(error)
+    console.error('sendRequest', error)
   })
 
   if (bulkResponse.errors) {
@@ -79,7 +80,7 @@ async function sendRequest (client, dataset) {
         })
       }
     })
-    console.log(erroredDocuments)
+    console.log('bulkResponse.errors ', erroredDocuments)
     throw erroredDocuments
   }
 

@@ -42,14 +42,19 @@ var fs_1 = require("fs");
 var path_1 = require("path");
 var glob_1 = require("glob");
 var doxtract_1 = require("doxtract");
-var elasticsearch_1 = require("@elastic/elasticsearch");
 var HttpGetQueue_1 = require("./HttpGetQueue");
-exports.client = new elasticsearch_1.Client({ node: 'http://localhost:9200' });
 var sub;
+var documents_dir;
+if (main_1.serve) {
+    documents_dir = path_1.join(__dirname, '/../../documents'); /*for dev*/
+}
+else {
+    documents_dir = path_1.join(__dirname, '/../../../../documents'); /*for build*/
+}
 // const { webContents } = win
 electron_1.ipcMain.on('changeIndexingDirectory', function (event) {
     electron_1.dialog.showOpenDialog(main_1.win, {
-        defaultPath: path_1.join(__dirname, '/../../documents'),
+        defaultPath: documents_dir,
         properties: ['openDirectory']
     }).then(function (files) {
         main_1.win.webContents.send('ipcLog', { message: { files: files, message: 'OpenDialogReturnValue' } });
@@ -61,8 +66,6 @@ electron_1.ipcMain.on('changeIndexingDirectory', function (event) {
 });
 electron_1.ipcMain.on('reindex', function (event, arg) {
     var sender = event.sender;
-    // note const documents_dir = join(__dirname, '/../../../../documents') /*for build*/
-    var documents_dir = path_1.join(__dirname, '/../../documents'); /*for dev*/
     if (!fs_1.existsSync(documents_dir)) {
         fs_1.mkdir(documents_dir, function (err) { if (err)
             throw err; });
@@ -79,7 +82,7 @@ function createIndex() {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, exports.client.indices.create({
+                case 0: return [4 /*yield*/, main_1.client.indices.create({
                         index: 'docx',
                         body: {
                             "mappings": {
@@ -109,7 +112,7 @@ function sendRequest(client, dataset) {
                     return [4 /*yield*/, client.bulk({ refresh: 'true', body: body }).then(function (data) {
                             bulkResponse = data.body;
                         }).catch(function (error) {
-                            console.error(error);
+                            console.error('sendRequest', error);
                         })];
                 case 1:
                     _a.sent();
@@ -126,7 +129,7 @@ function sendRequest(client, dataset) {
                                 });
                             }
                         });
-                        console.log(erroredDocuments_1);
+                        console.log('bulkResponse.errors ', erroredDocuments_1);
                         throw erroredDocuments_1;
                     }
                     return [4 /*yield*/, client.count({ index: 'docx' })];
@@ -144,7 +147,7 @@ function indexAll(files) {
             switch (_a.label) {
                 case 0:
                     length = files.length - 1;
-                    instance = new HttpGetQueue_1.HttpGetQueue(sendRequest, exports.client);
+                    instance = new HttpGetQueue_1.HttpGetQueue(sendRequest, main_1.client);
                     sub = instance.results.subscribe(function (res) {
                         main_1.win.webContents.send('ipcLog', { message: res });
                         if (res.count >= files.length) {
@@ -211,7 +214,7 @@ function separatedExtract(i, length, files) {
     });
 }
 function deleteAll() {
-    exports.client.indices.delete({
+    main_1.client.indices.delete({
         index: '_all'
     }, function (err, res) {
         if (err) {

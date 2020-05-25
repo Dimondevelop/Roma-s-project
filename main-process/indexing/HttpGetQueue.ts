@@ -13,7 +13,7 @@ export class HttpGetQueue {
   }
 }
 
-async function callback(foo: (...args) => Promise<any>, client, ...data):Promise<any> {
+async function callback(foo: (...args) => Promise<any>, client, ...data): Promise<any> {
   if (typeof foo === 'function') {
     return foo(client, ...data)
   } else {

@@ -3,7 +3,7 @@ import { ipcMain, dialog, app } from "electron"
 import { extractText } from "doxtract"
 import { parse } from "path"
 
-import { client } from '../indexing/indexing'
+import { client } from '../../main'
 import { Subscription } from 'rxjs';
 import {HttpGetQueue} from '../indexing/HttpGetQueue';
 
@@ -72,6 +72,7 @@ async function search(client, { document: text, name }): Promise<{results: Searc
 ipcMain.on('chooseSearchDocuments', (event) => {
   dialog.showOpenDialog(win, {
     title: 'Оберіть файли для пошуку',
+    buttonLabel: 'Шукати',
     properties: ['openFile', 'multiSelections']
   }).then(({ canceled, filePaths}) => {
     if (canceled) {
@@ -108,14 +109,8 @@ async function getMultipleResults(extractedDocuments: ExtractedDocument[]) {
 
     for (const exDoc of extractedDocuments) {
       instance.addToQueue(exDoc)
-      // await search(client, exDoc).then(({results, name}) => {
-      //   searchResults.push({document: results, name: name});
-      // }).catch((err) => {
-      //   throw err
-      // })
     }
   })
-
 }
 
 async function extractDocuments(documents: string[]):Promise<ExtractedDocument[]> {

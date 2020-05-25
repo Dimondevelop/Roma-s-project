@@ -23,7 +23,9 @@
 <!--      </button>-->
 <!--    </div>-->
     <div class="flex-center">
-      <button class="margin-10" nbButton status="success" outline (click)="chooseFiles()">Обрати файли</button>
+      <button class="margin-10" nbButton [status]="isSearching ? 'basic' : 'success'" outline
+              [nbSpinner]="isSearching" [class.no-pointer]="isSearching" nbSpinnerStatus="success" nbSpinnerSize="large"
+              (click)="chooseFiles()">Обрати файли для пошуку</button>
     </div>
     <br>
     <nb-tabset *ngIf="searchResults" class="results-tabset">
