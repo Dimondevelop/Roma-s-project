@@ -1,7 +1,15 @@
 <nb-layout>
   <nb-layout-header class="main-header" fixed>
     <h1>{{selectedItem?.title}}</h1> <nb-icon class="header-icon" *ngIf="selectedItem?.icon" [icon]="selectedItem.icon"></nb-icon>
-    <button class="app-quit" nbTooltip="Закрити програму" status="danger" nbButton (click)="appQuit()"><nb-icon icon="close"></nb-icon></button>
+    <button class="app-minimize" nbTooltip="Звернути" status="basic" nbButton (click)="appMinimize()">
+      <nb-icon icon="minus"></nb-icon>
+    </button>
+    <button class="app-maximize" [nbTooltip]="isMax ? 'Звернути у вікно' : 'Розвернути на весь екран'" status="basic" nbButton (click)="appMaximize()">
+      <nb-icon [icon]="isMax ? 'square' : 'external-link'"></nb-icon>
+    </button>
+    <button class="app-quit" nbTooltip="Закрити програму" status="danger" nbButton (click)="appQuit()">
+      <nb-icon icon="close"></nb-icon>
+    </button>
   </nb-layout-header>
 
   <nb-sidebar>

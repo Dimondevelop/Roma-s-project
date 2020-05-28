@@ -1,12 +1,10 @@
-import { win } from "../../main"
+import { win, HttpGetQueue } from "../../main"
 import { ipcMain, dialog, app } from "electron"
 import { extractText } from "doxtract"
 import { parse } from "path"
 
 import { client } from '../../main'
 import { Subscription } from 'rxjs';
-import {HttpGetQueue} from '../indexing/HttpGetQueue';
-
 let sub: Subscription
 
 ipcMain.on('search', (event, arg: { text: string }) => {
@@ -84,13 +82,11 @@ ipcMain.on('chooseSearchDocuments', (event) => {
         getMultipleResults(extractedDocuments).then((results: { document: SearchResult[], name: string }[]) => {
           win.webContents.send('searchResults', { results })
           sub.unsubscribe()
-        })
-
-      })
-
+        }).catch((error) => { throw error })
+      }).catch((error) => { throw error })
       // event.sender.send('selectedFiles', files)
     }
-  })
+  }).catch((error) => { throw error })
 })
 
 async function getMultipleResults(extractedDocuments: ExtractedDocument[]) {

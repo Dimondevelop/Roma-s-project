@@ -1,15 +1,3 @@
-<button class="margin-10"
-  nbTooltip="Будьте обережні! Ця дія видалить всі документи з наявної бази даних та розпочне нове сканування та індексацію документів в обраному архіві."
-  nbTooltipStatus="danger" nbTooltipPlacement="bottom" nbButton [status]="isReindexing ? 'basic' :'danger'" outline
-  size="large"
-  [nbSpinner]="isReindexing" [class.no-pointer]="isReindexing" nbSpinnerStatus="danger" nbSpinnerSize="large"
-  (click)="reindex()">Почати переіндексацію!
-</button>
-<button class="margin-10" nbButton status="primary" outline (click)="changeIndexingDirectory()">Обрати папку</button>
-<div class="list">
-  <pre>{{filesList | json}}</pre>
-</div>
-
 <nb-card>
   <nb-card-header>Пошук Дублікатів</nb-card-header>
   <nb-card-body>
@@ -22,10 +10,11 @@
 <!--              [disabled]="!(textArea | trim)" (click)="search()">Шукати-->
 <!--      </button>-->
 <!--    </div>-->
-    <div class="flex-center">
+    <div class="flex-center direction-column">
       <button class="margin-10" nbButton [status]="isSearching ? 'basic' : 'success'" outline
               [nbSpinner]="isSearching" [class.no-pointer]="isSearching" nbSpinnerStatus="success" nbSpinnerSize="large"
-              (click)="chooseFiles()">Обрати файли для пошуку</button>
+              (click)="chooseFiles()">Обрати файли для пошуку
+      </button>
     </div>
     <br>
     <nb-tabset *ngIf="searchResults" class="results-tabset">

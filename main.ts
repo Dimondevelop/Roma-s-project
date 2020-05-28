@@ -3,6 +3,8 @@ import { Client } from '@elastic/elasticsearch'
 import * as path from 'path'
 import * as url from 'url'
 import * as glob from "glob"
+import { Observable, Subject } from 'rxjs';
+import { concatMap } from 'rxjs/operators';
 
 export let win: BrowserWindow = null
 export const args = process.argv.slice(1),
@@ -81,7 +83,17 @@ try {
     }
   })
 
+  ipcMain.on('app-maximize', (event, arg) => {
+    win.isMaximized() ? win.unmaximize() : win.maximize()
+    event.sender.send('is-maximized', win.isMaximized())
+  })
+
+  ipcMain.on('app-minimize', (event, arg) => {
+    win.minimize()
+  })
+
   ipcMain.on('app-quit', (event, arg) => {
+    app.exit(0)
     app.quit()
   })
 
@@ -97,4 +109,24 @@ try {
 } catch (e) {
   // Catch Error
   // throw e
+}
+
+export class HttpGetQueue {
+  results: Observable<any>
+  queue$ = new Subject()
+  constructor(foo: (...args) => Promise<any>, client) {
+    this.results = this.queue$.pipe(concatMap((...data) => callback(foo, client, ...data)))
+  }
+
+  addToQueue(...data) {
+    this.queue$.next(...data)
+  }
+}
+
+async function callback(foo: (...args) => Promise<any>, client, ...data): Promise<any> {
+  if (typeof foo === 'function') {
+    return foo(client, ...data)
+  } else {
+    throw `${foo} is not function!`
+  }
 }

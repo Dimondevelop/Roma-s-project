@@ -1,30 +1,33 @@
-import { ipcMain, dialog, app } from "electron"
-import { win, client, serve } from '../../main'
+import { ipcMain, dialog } from "electron"
+import { win, client, serve, HttpGetQueue } from '../../main'
 import { Subscription } from "rxjs"
 import { existsSync, mkdir } from "fs"
 import { join, parse } from "path"
 import { sync } from "glob"
 import { extractText } from "doxtract"
-import { HttpGetQueue } from './HttpGetQueue'
+import { ceil10 } from '../helpers/math-helper'
 let sub: Subscription
-let documents_dir: string;
+let documents_dir: string
+let exProgress = { current: 0, prev: 0 }
 if (serve) {
   documents_dir = join(__dirname, '/../../documents') /*for dev*/
 } else {
   documents_dir = join(__dirname, '/../../../../documents') /*for build*/
 }
-// const { webContents } = win
 
 ipcMain.on('changeIndexingDirectory', (event) => {
+  const { sender } = event
   dialog.showOpenDialog(win, {
     defaultPath: documents_dir,
     properties: ['openDirectory']
   }).then((files) => {
-    win.webContents.send('ipcLog', {message: {files, message: 'OpenDialogReturnValue'}})
+    sender.send('ipcLog', {message: {files, message: 'OpenDialogReturnValue'}})
     if (files) {
-      event.sender.send('selectedDirectory', files)
-      win.webContents.send('ipcLog', {message: {files, message: 'if'}})
+      sender.send('selectedDirectory', files)
+      sender.send('ipcLog', {message: {files, message: 'if'}})
     }
+  }).catch((error) => {
+    throw error
   })
 })
 
@@ -35,11 +38,16 @@ ipcMain.on('reindex', (event, arg) => {
   }
   const files: string[] = sync(join(documents_dir, '*.docx'))
 
+  if (!files || files.length === 0 ) return
+
   deleteAll()
   createIndex().then(() => {
     indexAll(files).then(() => {
       sender.send('ipcLog', { message: 'All documents EXTRACTED' })
     }).catch((err) => { throw err })
+  }).catch((error) => {
+    sender.send('ipcLog', { message: { error, place: 'createIndex' } })
+    throw error
   })
 })
 
@@ -58,7 +66,6 @@ async function createIndex() {
 }
 
 async function sendRequest (client, dataset) {
-  win.webContents.send('ipcLog', {message: {client, dataset}})
   const body = dataset.flatMap((doc) => [{index: {_index: 'docx'}}, doc])
   let bulkResponse = { errors: null, items: [] }
   await client.bulk({ refresh: 'true', body }).then((data) => {
@@ -88,22 +95,39 @@ async function sendRequest (client, dataset) {
   return count
 }
 
+interface Results {
+  count: number
+  _shards: {
+    failed: number
+    skipped: number
+    successful: number
+    total: number
+  }
+}
+
 async function indexAll(files: string[]): Promise<void> {
   let length = files.length - 1
+  win.webContents.send('progress',  { indexed: { length } })
+  const sep = length > 1000 ? 200 : ceil10(length / 10)
+  exProgress.current = 1
   const instance = new HttpGetQueue(sendRequest, client)
-  sub = instance.results.subscribe((res) => {
-    win.webContents.send('ipcLog', {message: res})
-    if (res.count >= files.length) {
+  sub = instance.results.subscribe(({ count, _shards }: Results) => {
+    win.webContents.send('ipcLog', { message: { count, _shards } })
+    win.webContents.send('progress',  { indexed: { count } })
+    if (count >= files.length) {
       sub.unsubscribe()
-      win.webContents.send('reindexResponse', {files})
-      win.webContents.send('ipcLog', {message: 'files.length: ' + files.length + ' res.count: ' + res.count})
+      const fileNames = files.map((file) => parse(file).base)
+      win.webContents.send('reindexResponse', { files: fileNames })
+      win.webContents.send('ipcLog', { message: 'files.length: ' + files.length + ' res.count: ' + count })
     }
   })
   while (length > 0) {
     let i = length
-    length -= 200
+    length -= sep
     await separatedExtract(i, length, files).then((dataset) => {
       instance.addToQueue(dataset)
+    }).catch((error) => {
+      throw error
     })
   }
 }
@@ -113,7 +137,11 @@ async function separatedExtract(i, length, files: string[]): Promise<{ name: str
   for (; i > length && i >= 0; i--) {
     const name = parse(files[i]).name
     await extractText(files[i]).then((text) => {
-      // console.log(name, 'extracted!')
+      const extracted = Math.round(exProgress.current++ / files.length * 100)
+      if (exProgress.prev != extracted) {
+        win.webContents.send('progress', { extracted })
+        exProgress.prev = extracted
+      }
       dataset.push({
         name,
         "full_text": text
@@ -122,8 +150,6 @@ async function separatedExtract(i, length, files: string[]): Promise<{ name: str
   }
   return dataset
 }
-
-
 
 function deleteAll() {
   client.indices.delete({

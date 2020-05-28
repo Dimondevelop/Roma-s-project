@@ -1,6 +1,46 @@
-<div class="flex-center flex-column">
-  <h1 class="flex-center">Тут буде сторінка з налаштуваннями</h1>
-  <button nbButton status="info" (click)="goBack()" outline>
-    <nb-icon icon="arrow-back-outline"></nb-icon>Повернутися
-  </button>
+<nb-accordion>
+  <nb-accordion-item>
+    <nb-accordion-item-header>
+      Індексація
+    </nb-accordion-item-header>
+    <nb-accordion-item-body>
+      <button class="margin-10"
+              nbTooltip="Будьте обережні! Ця дія видалить всі документи з наявної бази даних та розпочне нове сканування та індексацію документів в обраному архіві."
+              nbTooltipStatus="danger" nbTooltipPlacement="bottom" nbButton [status]="isReindexing ? 'basic' :'danger'" outline
+              size="large"
+              [nbSpinner]="isReindexing" [class.no-pointer]="isReindexing" nbSpinnerStatus="danger" nbSpinnerSize="large"
+              (click)="reindex()">Почати переіндексацію!
+      </button>
+      <button class="margin-10" nbButton status="primary" outline (click)="changeIndexingDirectory()">Обрати папку</button>
+
+      <div class="indexing-progress">
+        <label for="extracted-progress">Видобування тексту з документів</label>
+        <nb-progress-bar id="extracted-progress" [value]="exValue" [status]="exStatus" [displayValue]="true"></nb-progress-bar>
+        <label for="extracted-progress">Індексування в базу даних</label>
+        <nb-progress-bar [value]="indexed.perc" [status]="indexStatus">{{indexed?.current}}</nb-progress-bar>
+      </div>
+    </nb-accordion-item-body>
+  </nb-accordion-item>
+
+  <nb-accordion-item>
+    <nb-accordion-item-header>
+      Пошук
+    </nb-accordion-item-header>
+    <nb-accordion-item-body>
+      Тут будуть налаштування пошуку...
+    </nb-accordion-item-body>
+  </nb-accordion-item>
+</nb-accordion>
+
+<div class="list">
+  <nb-card *ngIf="filesList" class="list-card">
+    <nb-card-header>Проіндексовані документи</nb-card-header>
+    <nb-card-body>
+      <nb-list>
+        <nb-list-item *ngFor="let file of filesList">
+          {{ file }}
+        </nb-list-item>
+      </nb-list>
+    </nb-card-body>
+  </nb-card>
 </div>

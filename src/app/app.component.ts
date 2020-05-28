@@ -31,13 +31,14 @@ export class AppComponent implements OnInit, OnDestroy {
       link: '/settings',
     },
     {
-      title: 'Тестування запитів',
+      title: 'Для тестування',
       icon: 'info-outline',
       link: '/test',
     }
   ]
   private destroy$ = new Subject<void>();
   selectedItem: NbMenuItem;
+  isMax: boolean;
   constructor(
     public electronService: ElectronService,
     private translate: TranslateService,
@@ -47,14 +48,14 @@ export class AppComponent implements OnInit, OnDestroy {
 
     console.log('AppConfig', AppConfig);
 
-    if (electronService.isElectron) {
-      console.log(process.env);
-      console.log('Mode electron');
-      console.log('Electron ipcRenderer', electronService.ipcRenderer);
-      console.log('NodeJS childProcess', electronService.childProcess);
-    } else {
-      console.log('Mode web');
-    }
+    // if (electronService.isElectron) {
+    //   console.log(process.env);
+    //   console.log('Mode electron');
+    //   console.log('Electron ipcRenderer', electronService.ipcRenderer);
+    //   console.log('NodeJS childProcess', electronService.childProcess);
+    // } else {
+    //   console.log('Mode web');
+    // }
   }
 
 
@@ -71,6 +72,19 @@ export class AppComponent implements OnInit, OnDestroy {
     this.menuService.onItemSelect().subscribe((menuBag) => {
       this.selectedItem = menuBag.item;
     })
+  }
+
+  appMaximize() {
+    this.electronService.appMaximize().then((isMax) => {
+      this.isMax = isMax;
+    }).catch((err) => {
+      console.log(err);
+      this.isMax = false;
+    });
+  }
+
+  appMinimize() {
+    this.electronService.appMinimize();
   }
 
   appQuit() {
