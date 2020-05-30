@@ -1,16 +1,38 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core'
+import { CommonModule } from '@angular/common'
 
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core'
 
-import { PageNotFoundComponent } from './components/';
-import { WebviewDirective } from './directives/';
-import { FormsModule } from '@angular/forms';
-import { NbButtonModule, NbIconModule, NbLayoutModule, NbMenuModule, NbSidebarModule } from '@nebular/theme';
-import { EmToStrongPipe, SafePipe, TrimPipe } from './pipes';
+import { PageNotFoundComponent, CheckElasticComponent, SwitcherComponent, DefaultModalComponent } from './components/'
+import { WebviewDirective } from './directives/'
+import { FormsModule } from '@angular/forms'
+import {
+  NbAlertModule,
+  NbButtonModule,
+  NbCardModule,
+  NbIconModule,
+  NbLayoutModule,
+  NbMenuModule,
+  NbSidebarModule,
+  NbSpinnerModule
+} from '@nebular/theme'
+import { EmToStrongPipe, SafePipe, TrimPipe } from './pipes'
+
+const exportComponents = [
+  SafePipe,
+  EmToStrongPipe,
+  TrimPipe,
+  CheckElasticComponent,
+  WebviewDirective,
+  SwitcherComponent,
+  DefaultModalComponent
+]
 
 @NgModule({
-  declarations: [PageNotFoundComponent, WebviewDirective, SafePipe, EmToStrongPipe, TrimPipe],
+  declarations: [
+    PageNotFoundComponent,
+    ...exportComponents
+  ],
   imports: [
     CommonModule,
     TranslateModule,
@@ -19,8 +41,16 @@ import { EmToStrongPipe, SafePipe, TrimPipe } from './pipes';
     NbSidebarModule,
     NbButtonModule,
     NbMenuModule,
-    NbIconModule
+    NbIconModule,
+    NbAlertModule,
+    NbSpinnerModule,
+    NbCardModule,
   ],
-  exports: [TranslateModule, WebviewDirective, FormsModule, EmToStrongPipe, SafePipe, TrimPipe]
+  exports: [
+    TranslateModule,
+    FormsModule,
+    ...exportComponents
+  ]
 })
-export class SharedModule {}
+export class SharedModule {
+}

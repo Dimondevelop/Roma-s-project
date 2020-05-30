@@ -4,43 +4,94 @@
       Індексація
     </nb-accordion-item-header>
     <nb-accordion-item-body>
-      <button class="margin-10"
-              nbTooltip="Будьте обережні! Ця дія видалить всі документи з наявної бази даних та розпочне нове сканування та індексацію документів в обраному архіві."
-              nbTooltipStatus="danger" nbTooltipPlacement="bottom" nbButton [status]="isReindexing ? 'basic' :'danger'" outline
-              size="large"
-              [nbSpinner]="isReindexing" [class.no-pointer]="isReindexing" nbSpinnerStatus="danger" nbSpinnerSize="large"
-              (click)="reindex()">Почати переіндексацію!
-      </button>
-      <button class="margin-10" nbButton status="primary" outline (click)="changeIndexingDirectory()">Обрати папку</button>
 
-      <div class="indexing-progress">
-        <label for="extracted-progress">Видобування тексту з документів</label>
-        <nb-progress-bar id="extracted-progress" [value]="exValue" [status]="exStatus" [displayValue]="true"></nb-progress-bar>
-        <label for="extracted-progress">Індексування в базу даних</label>
-        <nb-progress-bar [value]="indexed.perc" [status]="indexStatus">{{indexed?.current}}</nb-progress-bar>
+      <app-check-elastic></app-check-elastic>
+      <div class="row">
+        <div class="col-8 offset-xl-2 col-xl-6">
+          <div class="status" *ngIf="!eS.isReindexing && eS.elasticConnected">
+              <ng-container *ngIf="eS.filesList !== null">
+                <nb-alert [outline]="eS.filesList?.length ? 'info' : 'basic'" [nbSpinner]="!eS.filesList?.length" nbSpinnerStatus="info">
+                  <span *ngIf="eS.filesList?.length">Архів проіндексовано.</span>
+                </nb-alert>
+              </ng-container>
+          </div>
+        </div>
+        <div class="col-4 col-xl-2 view-modal" *ngIf="eS.filesList?.length && eS.elasticConnected">
+          <button nbButton outline status="primary" (click)="viewFilesList()">Переглянути</button>
+        </div>
+      </div>
+      <div class="row" *ngIf="eS.elasticConnected">
+        <div class="col-12 offset-xl-2 col-xl-7 reindex">
+          <button class="margin-10"
+                  nbTooltip="Будьте обережні! Ця дія видалить всі документи з наявної бази даних та розпочне нове сканування та індексацію документів в обраному архіві."
+                  nbTooltipStatus="danger" nbTooltipPlacement="bottom" nbButton [status]="eS.isReindexing ? 'basic' :'danger'" outline
+                  [nbSpinner]="eS.isReindexing" [class.no-pointer]="eS.isReindexing" nbSpinnerStatus="danger" nbSpinnerSize="large"
+                  (click)="reindex()">{{eS.filesList === null ? 'Індексувати' : 'Почати переіндексацію!'}}
+          </button>
+          <div class="indexing-progress margin-10">
+            <label for="extracted-progress">Видобуто тексту з документів</label>
+            <nb-progress-bar id="extracted-progress" [value]="eS.exValue" [status]="exStatus" [displayValue]="true"></nb-progress-bar>
+          </div>
+          <div class="indexing-progress margin-10">
+            <label for="extracted-progress">Проіндексовано в базу даних</label>
+            <nb-progress-bar [value]="eS.indexed.perc" [status]="indexStatus">{{eS.indexed?.current}}</nb-progress-bar>
+          </div>
+<!--          <button class="margin-10" nbButton status="primary" outline (click)="changeIndexingDirectory()">Обрати папку</button>-->
+        </div>
       </div>
     </nb-accordion-item-body>
   </nb-accordion-item>
 
-  <nb-accordion-item>
+  <nb-accordion-item #indexing>
     <nb-accordion-item-header>
-      Пошук
+      Налаштування Пошуку
     </nb-accordion-item-header>
     <nb-accordion-item-body>
-      Тут будуть налаштування пошуку...
+      <div class="row">
+        <div class="col-8 offset-xl-2 col-xl-6" id="separating-size">
+          <ng-container [ngTemplateOutlet]="isEdit ? edit : view">
+            <ng-template #view>
+              <span>Мінімальна кількість символів:</span>
+              <button nbButton outline status="control" (click)="editSeparatingSize()"
+                      [nbSpinner]="!separatingSize.value" nbSpinnerStatus="basic" nbSpinnerSize="small">{{separatingSize.value}}</button>
+              <button nbButton outline status="basic" (click)="editSeparatingSize()">
+                <nb-icon icon="edit-outline"></nb-icon>
+              </button>
+            </ng-template>
+            <ng-template #edit>
+              <form [formGroup]="form" (ngSubmit)="editSeparatingSize()">
+                 <input #range type="range" nbInput fullWidth fieldSize="medium" placeholder="Мінімальна кількість" formControlName="size"
+                        [min]="separatingSize.min" [max]="separatingSize.max" [value]="300" (ngModelChange)="num.value = $event">
+                 <input #num type="number" nbInput fullWidth fieldSize="medium" formControlName="size"
+                        [value]="separatingSize.value" (ngModelChange)="range.value = $event">
+                <div class="form-footer">
+                  <button nbButton outline status="info"
+                          [disabled]="form.invalid" type="submit">Зберегти</button>
+                  <div class="validation" *ngIf="form.get('size').invalid && form.get('size').touched">
+                    <small *ngIf="form.get('size').errors.required">Поле не може бути порожнім</small>
+                    <small *ngIf="form.get('size').errors.min">
+                      Мінімально можлива кількість {{form.get('size').errors.min.min}}, обрано {{form.get('size').errors.min.actual}}.
+                    </small>
+                    <small *ngIf="form.get('size').errors.max">
+                      Максимально можлива кількість {{form.get('size').errors.max.max}}, обрано {{form.get('size').errors.max.actual}}.
+                    </small>
+                  </div>
+                </div>
+              </form>
+            </ng-template>
+          </ng-container>
+        </div>
+      </div>
     </nb-accordion-item-body>
   </nb-accordion-item>
 </nb-accordion>
 
-<div class="list">
-  <nb-card *ngIf="filesList" class="list-card">
-    <nb-card-header>Проіндексовані документи</nb-card-header>
-    <nb-card-body>
-      <nb-list>
-        <nb-list-item *ngFor="let file of filesList">
-          {{ file }}
-        </nb-list-item>
-      </nb-list>
-    </nb-card-body>
-  </nb-card>
-</div>
+<ng-template #modal>
+  <div class="list">
+    <nb-list nbInfiniteList [threshold]="500">
+      <nb-list-item *ngFor="let file of eS.filesList">
+        {{ file }}
+      </nb-list-item>
+    </nb-list>
+  </div>
+</ng-template>

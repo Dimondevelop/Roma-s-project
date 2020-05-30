@@ -1,16 +1,43 @@
 .header-icon {
   font-size: 36px;
 }
+
 .main-header {
   -webkit-app-region: drag;
 
   button {
     -webkit-app-region: no-drag;
-    padding: 10px;
     margin: 5px;
+  }
+
+  .window-btn {
+    &.quit {
+      font-size: 35px;
+      padding: 10px;
+      font-weight: 500;
+    }
+
+    &:focus {
+      box-shadow: none;
+      background-color: #edf1f7;
+      border-color: transparent;
+    }
   }
 
   .app-minimize {
     margin-left: auto;
+  }
+
+  .header-title {
+    padding-left: 15px;
+    border-left: 1px solid #edf1f7;
+
+    @media screen and (max-width: 610px) {
+      font-size: 20px;
+    }
+
+    @media screen and (max-width: 470px) {
+      font-size: 14px;
+    }
   }
 }

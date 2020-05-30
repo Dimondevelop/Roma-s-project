@@ -16,12 +16,15 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
 // Nebular
 import {
-    NbThemeModule,
-    NbSidebarModule,
-    NbMenuModule,
-    NbLayoutModule,
-    NbButtonModule,
-    NbIconModule, NbInputModule, NbSpinnerModule, NbTooltipModule
+  NbThemeModule,
+  NbSidebarModule,
+  NbMenuModule,
+  NbLayoutModule,
+  NbButtonModule,
+  NbIconModule,
+  NbInputModule,
+  NbSpinnerModule,
+  NbTooltipModule, NbDialogModule,
 } from '@nebular/theme';
 
 import { HomeModule } from './home/home.module';
@@ -52,7 +55,7 @@ export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
         HomeModule,
         AppRoutingModule,
         NbEvaIconsModule,
-        NbThemeModule.forRoot({name: 'default'}),
+        NbThemeModule.forRoot({ name: 'default' }),
         NbSidebarModule.forRoot(),
         NbMenuModule.forRoot(),
         NbLayoutModule,
@@ -68,7 +71,10 @@ export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
                 deps: [HttpClient]
             }
         }),
-        NbTooltipModule
+        NbTooltipModule,
+      NbSidebarModule.forRoot(),
+      NbMenuModule.forRoot(),
+      NbDialogModule.forRoot(),
     ],
   providers: [],
   bootstrap: [AppComponent]

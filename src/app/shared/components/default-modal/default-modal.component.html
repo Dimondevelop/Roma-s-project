@@ -1,0 +1,13 @@
+<nb-card>
+  <nb-card-header>
+    <span>{{ title }}</span>
+    <button aria-label="Close" nbButton status="danger" (click)="dismiss()">&times;</button>
+  </nb-card-header>
+  <nb-card-body *ngIf="text" [innerHTML]="text"></nb-card-body>
+  <nb-card-body *ngIf="template">
+    <ng-container [ngTemplateOutlet]="template"></ng-container>
+  </nb-card-body>
+  <nb-card-footer>
+    <button nbButton hero status="primary" (click)="dismiss()">{{buttonText}}</button>
+  </nb-card-footer>
+</nb-card>

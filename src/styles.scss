@@ -38,3 +38,26 @@ html, body {
 .margin-10 {
   margin: 10px;
 }
+
+.status {
+  text-align: center;
+}
+
+.nb-theme-default {
+  form.ng-touched {
+    input {
+      &.ng-invalid.ng-touched {
+        border: 1px solid #f7d8d8;
+      }
+
+      &.ng-valid.ng-touched {
+        border: 1px solid #0095ff;
+      }
+    }
+    small {
+      color: red;
+    }
+  }
+}
+
+

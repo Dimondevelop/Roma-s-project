@@ -1,0 +1,30 @@
+@import '../../../styles/themes';
+
+@include nb-install-component() {
+  nb-card-header {
+    position: relative;
+
+    button {
+      position: absolute;
+      right: 0;
+      top: 0;
+      font-size: 35px;
+      padding: 10px;
+      margin: 10px;
+      font-weight: 500;
+
+      &:focus {
+        box-shadow: none;
+        background: #ff3d71;
+        border-color: transparent;
+      }
+    }
+  }
+  nb-card {
+    max-width: 600px;
+    max-height: 500px;
+  }
+  nb-card-footer {
+    text-align: right;
+  }
+}

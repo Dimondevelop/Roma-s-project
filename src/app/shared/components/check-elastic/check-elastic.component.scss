@@ -1,0 +1,13 @@
+nb-alert {
+  button {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+
+    nb-icon {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+}

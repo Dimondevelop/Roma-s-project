@@ -1,0 +1,14 @@
+<div class="row">
+  <div class="col-12 offset-xl-2 col-xl-8">
+    <div class="status">
+      <nb-alert *ngIf="!eS.elasticConnected" [status]="eS.elasticConnected === null ? 'basic' : 'danger'" [nbSpinner]="eS.elasticConnected === null" nbSpinnerStatus="danger">
+        <span *ngIf="eS.elasticConnected === null">Перевіряється підключення до Бази!</span>
+        <span *ngIf="eS.elasticConnected === false">Базу Даних НЕ ЗАПУЩЕНО!</span>
+        <button (click)="rePing()" nbButton outline status="control"><nb-icon icon="redo-alt" pack="fa"></nb-icon></button>
+      </nb-alert>
+      <nb-alert status="warning" *ngIf="!eS.isReindexing && eS.elasticConnected && eS.filesList === null">
+        <span>База даних порожня. Додайте документи в архів та виконайте індексацію!</span>
+      </nb-alert>
+    </div>
+  </div>
+</div>

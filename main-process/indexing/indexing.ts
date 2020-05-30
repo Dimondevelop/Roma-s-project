@@ -1,19 +1,18 @@
-import { ipcMain, dialog } from "electron"
+import { ipcMain, dialog, app } from "electron"
 import { win, client, serve, HttpGetQueue } from '../../main'
 import { Subscription } from "rxjs"
 import { existsSync, mkdir } from "fs"
 import { join, parse } from "path"
 import { sync } from "glob"
 import { extractText } from "doxtract"
+import {
+  set as setStorage,
+  get as getStorage,
+  remove as removeStorage } from 'electron-json-storage'
 import { ceil10 } from '../helpers/math-helper'
 let sub: Subscription
-let documents_dir: string
+let documents_dir: string = join(app.getAppPath(), 'documents')
 let exProgress = { current: 0, prev: 0 }
-if (serve) {
-  documents_dir = join(__dirname, '/../../documents') /*for dev*/
-} else {
-  documents_dir = join(__dirname, '/../../../../documents') /*for build*/
-}
 
 ipcMain.on('changeIndexingDirectory', (event) => {
   const { sender } = event
@@ -38,7 +37,10 @@ ipcMain.on('reindex', (event, arg) => {
   }
   const files: string[] = sync(join(documents_dir, '*.docx'))
 
-  if (!files || files.length === 0 ) return
+  if (!files || files.length === 0 ) {
+    sender.send('reindexResponse', { empty: true })
+    return
+  }
 
   deleteAll()
   createIndex().then(() => {
@@ -117,6 +119,10 @@ async function indexAll(files: string[]): Promise<void> {
     if (count >= files.length) {
       sub.unsubscribe()
       const fileNames = files.map((file) => parse(file).base)
+
+      setStorage('indexed', { files: fileNames}, (error) => {
+        if (error) throw error;
+      });
       win.webContents.send('reindexResponse', { files: fileNames })
       win.webContents.send('ipcLog', { message: 'files.length: ' + files.length + ' res.count: ' + count })
     }
@@ -159,6 +165,9 @@ function deleteAll() {
       throw err.message
     } else {
       win.webContents.send('ipcLog', { message: 'All indexes have been deleted!' })
+      removeStorage('indexed', function(error) {
+        if (error) throw error;
+      });
     }
   })
 }

@@ -1,8 +1,9 @@
 import { app, ipcMain, BrowserWindow, screen as electronScreen } from 'electron'
 import { Client } from '@elastic/elasticsearch'
-import * as path from 'path'
-import * as url from 'url'
-import * as glob from "glob"
+import { join } from "path"
+import { format } from 'url'
+import { sync } from "glob"
+import { setDataPath } from 'electron-json-storage'
 import { Observable, Subject } from 'rxjs';
 import { concatMap } from 'rxjs/operators';
 
@@ -10,6 +11,8 @@ export let win: BrowserWindow = null
 export const args = process.argv.slice(1),
     serve = args.some(val => val === '--serve'),
     client = new Client({ node: 'http://localhost:9200' })
+
+setDataPath(join(app.getAppPath(), 'data'));
 
 function createWindow(): BrowserWindow {
 
@@ -34,8 +37,8 @@ function createWindow(): BrowserWindow {
     })
     win.loadURL('http://localhost:4200')
   } else {
-    win.loadURL(url.format({
-      pathname: path.join(__dirname, 'dist/index.html'),
+    win.loadURL(format({
+      pathname: join(__dirname, 'dist/index.html'),
       protocol: 'file:',
       slashes: true
     }))
@@ -60,7 +63,7 @@ function createWindow(): BrowserWindow {
 }
 
 function require_main_process (): void {
-  const files = glob.sync(path.join(__dirname, 'main-process/**/*.js'))
+  const files = sync(join(__dirname, 'main-process/**/*.js'))
   files.forEach((file) => { require(file) })
 }
 
@@ -81,20 +84,6 @@ try {
     if (process.platform !== 'darwin') {
       app.quit()
     }
-  })
-
-  ipcMain.on('app-maximize', (event, arg) => {
-    win.isMaximized() ? win.unmaximize() : win.maximize()
-    event.sender.send('is-maximized', win.isMaximized())
-  })
-
-  ipcMain.on('app-minimize', (event, arg) => {
-    win.minimize()
-  })
-
-  ipcMain.on('app-quit', (event, arg) => {
-    app.exit(0)
-    app.quit()
   })
 
   app.on('activate', () => {

@@ -1,11 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ElectronService } from './core/services';
-import { TranslateService } from '@ngx-translate/core';
-import { AppConfig } from '../environments/environment';
-import { NbMenuService } from '@nebular/theme';
-import { takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs';
-import {NbMenuItem} from '@nebular/theme/components/menu/menu.service';
+import { Component, OnInit, OnDestroy } from '@angular/core'
+import { ElectronService } from './core/services'
+import { TranslateService } from '@ngx-translate/core'
+import { AppConfig } from '../environments/environment'
+import { NbIconLibraries, NbMenuService, NbSidebarService } from '@nebular/theme'
+import { Subject } from 'rxjs'
+import { NbMenuItem } from '@nebular/theme/components/menu/menu.service'
 
 @Component({
   selector: 'app-root',
@@ -36,58 +35,60 @@ export class AppComponent implements OnInit, OnDestroy {
       link: '/test',
     }
   ]
-  private destroy$ = new Subject<void>();
-  selectedItem: NbMenuItem;
-  isMax: boolean;
+  private destroy$ = new Subject<void>()
+  selectedItem: NbMenuItem
+  isMax: boolean
   constructor(
     public electronService: ElectronService,
     private translate: TranslateService,
-    private menuService: NbMenuService
+    private menuService: NbMenuService,
+    private sidebarService: NbSidebarService,
+    iconsLibrary: NbIconLibraries
   ) {
     translate.setDefaultLang('uk')
 
-    console.log('AppConfig', AppConfig);
-
     // if (electronService.isElectron) {
-    //   console.log(process.env);
-    //   console.log('Mode electron');
-    //   console.log('Electron ipcRenderer', electronService.ipcRenderer);
-    //   console.log('NodeJS childProcess', electronService.childProcess);
+    //   console.log(process.env)
+    //   console.log('Mode electron')
+    //   console.log('Electron ipcRenderer', electronService.ipcRenderer)
+    //   console.log('NodeJS childProcess', electronService.childProcess)
     // } else {
-    //   console.log('Mode web');
+    //   console.log('Mode web')
     // }
+
+
+    iconsLibrary.registerFontPack('fa', { packClass: 'fa', iconClassPrefix: 'fa' });
+    iconsLibrary.registerFontPack('far', { packClass: 'far', iconClassPrefix: 'fa' });
   }
+
+  sidebarToggle = () => this.sidebarService.toggle(true, 'menu-sidebar')
 
 
   ngOnInit(): void {
-    this.getSelectedItem();
+    this.electronService.init()
+    this.getSelectedItem()
+    this.isMax = this.electronService.win.isMaximized()
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    this.electronService.destroy()
+    this.destroy$.next()
+    this.destroy$.complete()
   }
 
-  getSelectedItem() {
+  getSelectedItem(): void {
     this.menuService.onItemSelect().subscribe((menuBag) => {
-      this.selectedItem = menuBag.item;
+      this.selectedItem = menuBag.item
     })
   }
 
-  appMaximize() {
-    this.electronService.appMaximize().then((isMax) => {
-      this.isMax = isMax;
-    }).catch((err) => {
-      console.log(err);
-      this.isMax = false;
-    });
+  appMaximize = (): void => {
+    const { win } = this.electronService
+    this.isMax ? win.unmaximize() : win.maximize()
+    this.isMax = win.isMaximized()
   }
 
-  appMinimize() {
-    this.electronService.appMinimize();
-  }
+  appMinimize = (): void => this.electronService.win.minimize()
 
-  appQuit() {
-    this.electronService.appQuit();
-  }
+  appQuit = (): void => this.electronService.win.destroy()
 }
