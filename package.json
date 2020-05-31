@@ -1,6 +1,6 @@
 {
   "name": "duplicate-finder",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Пошук Дублікатів",
   "main": "main.js",
   "author": "PDI",

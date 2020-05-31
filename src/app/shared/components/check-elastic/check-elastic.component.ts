@@ -8,7 +8,7 @@ import { ElectronService } from '../../../core/services';
 })
 export class CheckElasticComponent implements OnInit {
 
-  constructor(private eS: ElectronService) { }
+  constructor(public eS: ElectronService) { }
 
   ngOnInit(): void {
     this.eS.elasticPing()

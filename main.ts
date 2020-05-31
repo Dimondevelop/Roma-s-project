@@ -4,15 +4,15 @@ import { join } from "path"
 import { format } from 'url'
 import { sync } from "glob"
 import { setDataPath } from 'electron-json-storage'
-import { Observable, Subject } from 'rxjs';
-import { concatMap } from 'rxjs/operators';
+import { Observable, Subject } from 'rxjs'
+import { concatMap } from 'rxjs/operators'
 
 export let win: BrowserWindow = null
 export const args = process.argv.slice(1),
-    serve = args.some(val => val === '--serve'),
-    client = new Client({ node: 'http://localhost:9200' })
+  serve = args.some(val => val === '--serve'),
+  client = new Client({ node: 'http://localhost:9200' })
 
-setDataPath(join(app.getAppPath(), 'data'));
+setDataPath(join(__dirname, serve ? '/data' : '/../../data'))
 
 function createWindow(): BrowserWindow {
 
@@ -62,7 +62,7 @@ function createWindow(): BrowserWindow {
   return win
 }
 
-function require_main_process (): void {
+function require_main_process(): void {
   const files = sync(join(__dirname, 'main-process/**/*.js'))
   files.forEach((file) => { require(file) })
 }
@@ -103,6 +103,7 @@ try {
 export class HttpGetQueue {
   results: Observable<any>
   queue$ = new Subject()
+
   constructor(foo: (...args) => Promise<any>, client) {
     this.results = this.queue$.pipe(concatMap((...data) => callback(foo, client, ...data)))
   }

@@ -20,7 +20,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   isSearching = false
   textArea: string
 
-  constructor(private eS: ElectronService) { }
+  constructor(public eS: ElectronService) { }
 
   ngOnInit(): void {}
 

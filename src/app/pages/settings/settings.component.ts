@@ -25,7 +25,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   constructor(
     private _location: Location,
-    private eS: ElectronService,
+    public eS: ElectronService,
     readonly nz: NgZone,
     private dialogService: NbDialogService,
   ) {}
@@ -49,7 +49,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   myCL(msg) {
-    console.log(msg);
+    console.log(msg)
   }
 
   ngOnDestroy(): void {
@@ -61,7 +61,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       extracted && (this.eS.exValue = extracted)
       if (indexed?.count) {
         this.eS.indexed.current = indexed.count
-        this.eS.indexed.max && (this.eS.indexed.perc = Math.round( indexed.count / this.eS.indexed.max * 100))
+        this.eS.indexed.max && (this.eS.indexed.perc = Math.round(indexed.count / this.eS.indexed.max * 100))
       }
       indexed?.length && (this.eS.indexed.max = indexed.length)
     })
@@ -77,10 +77,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
       } else {
         this.dialogService.open(DefaultModalComponent, {
           context: {
-            title: 'Неможливо почати індексування!',
-            text: 'Документи відсутні! Для того щоб почати індексування, помістіть документи в архів (папка documents в директорії з програмою).'
+            title: 'Неможливо почати індексацію!',
+            text: 'Документи відсутні! Для того щоб почати індексацію, помістіть документи в архів (папка documents в директорії з програмою).'
           },
-        });
+        })
       }
       this.eS.getIndexedFiles()
       this.eS.isReindexing = false
@@ -90,7 +90,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   changeIndexingDirectory() {
     this.eS.exValue = 0
     this.eS.changeIndexingDirectory().then((data) => {
-      console.log({data})
+      console.log({ data })
     })
   }
 
@@ -106,16 +106,16 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   getSeparatingSize() {
-    this.eS.storage.get('search-settings', (error, { separatedSize }: { separatedSize: number }) => {
+    this.eS.storage.get('search-settings', (error, arg: { separatedSize?: number }) => {
       if (error) throw error
 
-      this.separatingSize.value = separatedSize
-      this.form.get('size').patchValue(separatedSize)
+      this.separatingSize.value = arg?.separatedSize || 500
+      this.form.get('size').patchValue(arg?.separatedSize || 500)
     })
   }
 
   setSeparatingSize(size: number) {
-    this.separatingSize.value = size;
+    this.separatingSize.value = size
     this.eS.storage.set('search-settings', { separatedSize: size }, (error) => {
       if (error) throw error
     })
@@ -127,7 +127,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
         title: 'Список проіндексованих документів',
         template: this.modal
       },
-    });
+    })
   }
 }
 
