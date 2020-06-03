@@ -1,8 +1,10 @@
-<span class="switcher switcher-1">
-   <input type="checkbox" id="switcher-1">
-   <label for="switcher-1"></label>
-</span>
-<span class="switcher switcher-2">
-   <input type="checkbox" id="switcher-2">
-   <label for="switcher-2"></label>
-</span>
+<div class="switcher-wrapper">
+  <span [ngStyle]="size" class="switcher switcher-1" *ngIf="!fullSize">
+     <input [checked]="initialValue" [(ngModel)]="initialValue" (change)="valueEmit()" [ngStyle]="size" type="checkbox" id="switcher-1" appStyleVars [onText]="names.on" [offText]="names.off">
+     <label for="switcher-1"></label>
+  </span>
+  <span [ngStyle]="size" class="switcher {{size.width}} switcher-2" *ngIf="fullSize">
+     <input [ngStyle]="size" type="checkbox" id="switcher-2">
+     <label [ngStyle]="size" for="switcher-2"></label>
+  </span>
+</div>

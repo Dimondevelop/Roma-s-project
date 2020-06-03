@@ -12,40 +12,79 @@ let sub: Subscription
 
 ipcMain.on('search', (event, arg: { text: string }) => {
   const { sender } = event
-  getSeparatingSize().then((size) => {
-    const separatedText = separate(arg.text, size)
-    search(client, { document: separatedText, name: 'textArea' }).then((results) => {
+  getSearchSetting().then((settings: SearchSettings) => {
+    const document = separate(arg.text, settings?.separatedSize || 500)
+    duplicateSearch(client, { document, name: 'textArea' }).then((results) => {
       sender.send('ipcLog', { message: { results } })
       sender.send('searchResults', { results: results.results })
-    }).catch((err) => {
-      throw err
-    })
+    }).catch(throwErr)
     win.webContents.send('ipcLog', { message: 'OnSearch emit' })
-  }).catch((err) => { throw err })
+  }).catch(throwErr)
 })
 
-function getSeparatingSize(): Promise<number> {
-  return new Promise((resolve) => {
-    getStorage('search-settings', (error, arg: { separatedSize?: number }) => {
+ipcMain.on('chooseSearchDocuments', (event) => {
+  dialog.showOpenDialog(win, {
+    title: 'Оберіть файли для пошуку',
+    buttonLabel: 'Шукати',
+    properties: ['openFile', 'multiSelections'],
+    filters: [
+      { name: 'Documents', extensions: ['docx'] },
+    ],
+  }).then(({ canceled, filePaths }) => {
+    if (canceled) {
+      event.sender.send('searchResults', false)
+      return
+    }
+    if (filePaths?.length) {
+      extractDocuments(filePaths).then((extractedDocuments: ExtractedDocument[]) => {
+        getMultipleResults(extractedDocuments).then((results: { document: SearchResult[], name: string }[]) => {
+          win.webContents.send('searchResults', { results })
+          sub.unsubscribe()
+        }).catch(throwErr)
+      }).catch(throwErr)
+    }
+  }).catch(throwErr)
+})
+
+async function getSearchSetting(): Promise<SearchSettings> {
+  return await new Promise((resolve) => {
+    getStorage('search-settings', (error, settings: SearchSettings) => {
       if (error) throw error
 
-      resolve(arg?.separatedSize || 500)
+      resolve(settings)
     })
   })
-
 }
 
 function separate(text: string, size: number): RegExpMatchArray {
   const removeRN = /[\r\n]/gm
-  // const regexp = /(.{500}|.+$)([\u0400-\u04FF\S]|\w)*/gm
   const regexp = new RegExp(`(.{${size}}|.+$)([\u0400-\u04FF\\S]|\\w)*`, 'gm')
 
-  const separatedText = text.replace(removeRN, ' ').match(regexp)
-  console.log(separatedText)
-  return separatedText
+  return text.replace(removeRN, ' ').match(regexp)
 }
 
-async function search(client, { document: text, name }): Promise<{ results: SearchResult[], name: string }> {
+async function antiPlagiarismSearch(client, { document: text, name }: ExtractedDocument): Promise<{ results: SearchResult[], name: string }> {
+
+  const { body } = await client.search({
+    index: 'docx',
+    body: {
+      "_source": "name",
+      "query": {
+        "match" : { "full_text" : text }
+      },
+      "score_mode": "avg",
+      "highlight": {
+        "fields": {
+          "full_text": {}
+        }
+      }
+    }
+  })
+
+  return { results: body.hits.hits, name }
+}
+
+async function duplicateSearch(client, { document: text, name }: ExtractedDocument): Promise<{ results: SearchResult[], name: string }> {
   const queries = []
   for (let str of text) {
     queries.push({ "match": { "query": str } })
@@ -63,10 +102,6 @@ async function search(client, { document: text, name }): Promise<{ results: Sear
             }
           }
         }
-        // "match" : { "full_text" : text }
-/*        "match" : {
-          "full_text" : { "query" : text, "operator" : "and" }
-        }*/
       },
       "highlight": {
         "fields": {
@@ -84,38 +119,17 @@ async function search(client, { document: text, name }): Promise<{ results: Sear
   // })
 }
 
-ipcMain.on('chooseSearchDocuments', (event) => {
-  dialog.showOpenDialog(win, {
-    title: 'Оберіть файли для пошуку',
-    buttonLabel: 'Шукати',
-    properties: ['openFile', 'multiSelections']
-  }).then(({ canceled, filePaths }) => {
-    if (canceled) {
-      event.sender.send('searchResults', false)
-      return
-    }
-    if (filePaths.length) {
-      extractDocuments(filePaths).then((extractedDocuments: ExtractedDocument[]) => {
-        getMultipleResults(extractedDocuments).then((results: { document: SearchResult[], name: string }[]) => {
-          win.webContents.send('searchResults', { results })
-          sub.unsubscribe()
-        }).catch((error) => { throw error })
-      }).catch((error) => { throw error })
-      // event.sender.send('selectedFiles', files)
-    }
-  }).catch((error) => { throw error })
-})
-
 async function getMultipleResults(extractedDocuments: ExtractedDocument[]) {
+  const isAntiPlagiarismMode: boolean = typeof extractedDocuments[0].document === 'string'
   const searchResults: { document: SearchResult[], name: string }[] = []
-  const instance = new HttpGetQueue(search, client)
+  const instance = new HttpGetQueue(isAntiPlagiarismMode ? antiPlagiarismSearch : duplicateSearch, client)
   let i = 0
   return await new Promise((resolve) => {
     sub = instance.results.subscribe(({ results, name }) => {
       i++
       win.webContents.send('ipcLog', { message: { res: { results, name }, log: 'ipc' } })
       searchResults.push({ document: results, name })
-      if (i === extractedDocuments.length) {
+      if (i === extractedDocuments?.length) {
         resolve(searchResults)
       }
     })
@@ -127,13 +141,20 @@ async function getMultipleResults(extractedDocuments: ExtractedDocument[]) {
 }
 
 async function extractDocuments(documents: string[]): Promise<ExtractedDocument[]> {
-  const extractedDocuments: { document: RegExpMatchArray, name: string }[] = []
-  for (let doc of documents) {
-    await extractText(doc).then((text) => {
-      extractedDocuments.push({ document: separate(text, 500), name: parse(doc).name })
-    }).catch((err) => { throw err })
-  }
+  const extractedDocuments: { document: RegExpMatchArray | string, name: string }[] = []
+  await getSearchSetting().then(async (settings: SearchSettings) => {
+    for (let doc of documents) {
+      await extractText(doc).then((text: string) => {
+        const document = settings?.mode ? text : separate(text, settings?.separatedSize || 500)
+        extractedDocuments.push({ document, name: parse(doc).name })
+      }).catch(throwErr)
+    }
+  }).catch(throwErr)
   return extractedDocuments
+}
+
+function throwErr(err) {
+  throw err
 }
 
 interface SearchResult {
@@ -145,4 +166,5 @@ interface SearchResult {
   highlight: { full_text: string[] }
 }
 
-interface ExtractedDocument { document: RegExpMatchArray, name: string }
+interface ExtractedDocument { document: RegExpMatchArray | string, name: string }
+interface SearchSettings { separatedSize?: number, mode?: boolean }

@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common'
 import { TranslateModule } from '@ngx-translate/core'
 
 import { PageNotFoundComponent, CheckElasticComponent, SwitcherComponent, DefaultModalComponent } from './components/'
-import { WebviewDirective } from './directives/'
+import { WebviewDirective, StyleVarsDirective } from './directives/'
 import { FormsModule } from '@angular/forms'
 import {
   NbAlertModule,
@@ -16,40 +16,46 @@ import {
   NbSidebarModule,
   NbSpinnerModule
 } from '@nebular/theme'
-import { EmToStrongPipe, SafePipe, TrimPipe } from './pipes'
+import { EmToStrongPipe, SafePipe, TrimPipe } from './pipes';
 
-const exportComponents = [
+const exportDeclaredComponents = [
   SafePipe,
   EmToStrongPipe,
   TrimPipe,
   CheckElasticComponent,
   WebviewDirective,
+  StyleVarsDirective,
   SwitcherComponent,
-  DefaultModalComponent
+]
+
+const exportImportedComponents = [
+  NbSpinnerModule,
+  NbCardModule,
+  NbLayoutModule,
+  NbIconModule,
+  NbButtonModule,
+  NbAlertModule,
 ]
 
 @NgModule({
   declarations: [
     PageNotFoundComponent,
-    ...exportComponents
+    DefaultModalComponent,
+    ...exportDeclaredComponents,
   ],
   imports: [
     CommonModule,
     TranslateModule,
     FormsModule,
-    NbLayoutModule,
     NbSidebarModule,
-    NbButtonModule,
     NbMenuModule,
-    NbIconModule,
-    NbAlertModule,
-    NbSpinnerModule,
-    NbCardModule,
+    ...exportImportedComponents,
   ],
   exports: [
     TranslateModule,
     FormsModule,
-    ...exportComponents
+    ...exportImportedComponents,
+    ...exportDeclaredComponents
   ]
 })
 export class SharedModule {

@@ -48,6 +48,12 @@
     </nb-accordion-item-header>
     <nb-accordion-item-body>
       <div class="row">
+        <div class="col-8 offset-xl-2 col-xl-6 flex-center">
+          <h5>Режим:</h5> &nbsp;&nbsp;&nbsp;
+          <app-switcher (value)="onChangeMode($event)" [initialValue]="eS.mode" [names]="{ on: '\'Антиплагіат\'', off: '\'Пошук Дублікатів\'' }"></app-switcher>
+        </div>
+      </div>
+      <div class="row" *ngIf="!eS.mode">
         <div class="col-8 offset-xl-2 col-xl-6" id="separating-size">
           <ng-container [ngTemplateOutlet]="isEdit ? edit : view">
             <ng-template #view>

@@ -6,7 +6,6 @@
   -webkit-app-region: drag;
 
   button {
-    -webkit-app-region: no-drag;
     margin: 5px;
   }
 
@@ -31,6 +30,7 @@
   .header-title {
     padding-left: 15px;
     border-left: 1px solid #edf1f7;
+    white-space: nowrap;
 
     @media screen and (max-width: 610px) {
       font-size: 20px;

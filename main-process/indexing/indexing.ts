@@ -1,4 +1,4 @@
-import { ipcMain, dialog, app } from "electron"
+import { ipcMain, dialog } from "electron"
 import { win, client, serve, HttpGetQueue } from '../../main'
 import { Subscription } from "rxjs"
 import { existsSync, mkdir } from "fs"
@@ -40,7 +40,7 @@ ipcMain.on('reindex', (event, arg) => {
   }
   const files: string[] = sync(join(documents_dir, '*.docx'))
 
-  if (!files || files.length === 0) {
+  if (!files || files?.length === 0) {
     sender.send('reindexResponse', { empty: true })
     return
   }
@@ -113,7 +113,7 @@ interface Results {
 }
 
 async function indexAll(files: string[]): Promise<void> {
-  let length = files.length - 1
+  let length = files?.length - 1
   win.webContents.send('progress', { indexed: { length } })
   const sep = length > 1000 ? 200 : ceil10(length / 10)
   exProgress.current = 1
@@ -121,7 +121,7 @@ async function indexAll(files: string[]): Promise<void> {
   sub = instance.results.subscribe(({ count, _shards }: Results) => {
     win.webContents.send('ipcLog', { message: { count, _shards } })
     win.webContents.send('progress', { indexed: { count } })
-    if (count >= files.length) {
+    if (count >= files?.length) {
       sub.unsubscribe()
       const fileNames = files.map((file) => parse(file).base)
 
@@ -129,7 +129,7 @@ async function indexAll(files: string[]): Promise<void> {
         if (error) throw error
       })
       win.webContents.send('reindexResponse', { files: fileNames })
-      win.webContents.send('ipcLog', { message: 'files.length: ' + files.length + ' res.count: ' + count })
+      win.webContents.send('ipcLog', { message: 'files.length: ' + files?.length + ' res.count: ' + count })
     }
   })
   while (length > 0) {
@@ -148,7 +148,7 @@ async function separatedExtract(i, length, files: string[]): Promise<{ name: str
   for (; i > length && i >= 0; i--) {
     const name = parse(files[i]).name
     await extractText(files[i]).then((text) => {
-      const extracted = Math.round(exProgress.current++ / files.length * 100)
+      const extracted = Math.round(exProgress.current++ / files?.length * 100)
       if (exProgress.prev != extracted) {
         win.webContents.send('progress', { extracted })
         exProgress.prev = extracted

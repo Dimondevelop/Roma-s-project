@@ -39,7 +39,7 @@ export class AppComponent implements OnInit, OnDestroy {
   selectedItem: NbMenuItem
   isMax: boolean
   constructor(
-    public electronService: ElectronService,
+    public eS: ElectronService,
     private translate: TranslateService,
     private menuService: NbMenuService,
     private sidebarService: NbSidebarService,
@@ -47,11 +47,11 @@ export class AppComponent implements OnInit, OnDestroy {
   ) {
     translate.setDefaultLang('uk')
 
-    // if (electronService.isElectron) {
+    // if (eS.isElectron) {
     //   console.log(process.env)
     //   console.log('Mode electron')
-    //   console.log('Electron ipcRenderer', electronService.ipcRenderer)
-    //   console.log('NodeJS childProcess', electronService.childProcess)
+    //   console.log('Electron ipcRenderer', eS.ipcRenderer)
+    //   console.log('NodeJS childProcess', eS.childProcess)
     // } else {
     //   console.log('Mode web')
     // }
@@ -65,13 +65,19 @@ export class AppComponent implements OnInit, OnDestroy {
 
 
   ngOnInit(): void {
-    this.electronService.init()
+    this.eS.init()
     this.getSelectedItem()
-    this.isMax = this.electronService.win.isMaximized()
+    this.isMax = this.eS.win.isMaximized()
+    this.eS.win.addListener('maximize', () => {
+      this.isMax = true;
+    })
+    this.eS.win.addListener('unmaximize', () => {
+      this.isMax = false;
+    })
   }
 
   ngOnDestroy(): void {
-    this.electronService.destroy()
+    this.eS.destroy()
     this.destroy$.next()
     this.destroy$.complete()
   }
@@ -83,12 +89,11 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   appMaximize = (): void => {
-    const { win } = this.electronService
+    const { win } = this.eS
     this.isMax ? win.unmaximize() : win.maximize()
-    this.isMax = win.isMaximized()
   }
 
-  appMinimize = (): void => this.electronService.win.minimize()
+  appMinimize = (): void => this.eS.win.minimize()
 
-  appQuit = (): void => this.electronService.win.destroy()
+  appQuit = (): void => this.eS.win.destroy()
 }

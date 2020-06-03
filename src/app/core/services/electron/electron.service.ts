@@ -27,6 +27,7 @@ export class ElectronService {
   elasticConnected: boolean = null
   exValue: number = 0
   indexed: { current?: number, perc?: number, max?: number } = { current: 0, perc: 0, max: 100 }
+  mode: boolean
 
   get isElectron(): boolean {
     return !!(window && window.process && window.process.type)
@@ -66,7 +67,6 @@ export class ElectronService {
   }
 
   async elasticPing() {
-    console.log('ping')
     await this.elasticClient.ping().then(() => {
       this.elasticConnected = true
     }).catch(() => {
@@ -122,7 +122,7 @@ export class ElectronService {
           this.filesList = data?.files || null
           if (this.filesList?.length) {
             this.exValue = 100
-            this.indexed.current = this.filesList.length
+            this.indexed.current = this.filesList?.length
             this.indexed.perc = 100
           }
         })

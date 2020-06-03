@@ -28,7 +28,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
     public eS: ElectronService,
     readonly nz: NgZone,
     private dialogService: NbDialogService,
-  ) {}
+  ) {
+  }
 
   @ViewChild('indexing', { static: true }) accordion
   @ViewChild('modal', { static: true }) modal
@@ -44,7 +45,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
     this.eS.ipcRenderer.on('progress', this.onProgress)
     this.accordion.toggle()
-    this.getSeparatingSize()
+    this.getSearchSetting()
     this.isEdit = false
   }
 
@@ -105,19 +106,25 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.isEdit = !this.isEdit
   }
 
-  getSeparatingSize() {
-    this.eS.storage.get('search-settings', (error, arg: { separatedSize?: number }) => {
+  getSearchSetting() {
+    this.eS.storage.get('search-settings', (error, settings: SearchSettings) => {
       if (error) throw error
 
-      this.separatingSize.value = arg?.separatedSize || 500
-      this.form.get('size').patchValue(arg?.separatedSize || 500)
+      this.separatingSize.value = settings?.separatedSize || 500
+      this.form.get('size').patchValue(settings?.separatedSize || 500)
+      this.eS.mode = settings?.mode || false
     })
   }
 
   setSeparatingSize(size: number) {
     this.separatingSize.value = size
-    this.eS.storage.set('search-settings', { separatedSize: size }, (error) => {
+    const settingKey = 'search-settings'
+    this.eS.storage.get(settingKey, (error, settings: SearchSettings) => {
       if (error) throw error
+
+      this.eS.storage.set(settingKey, { ...settings, separatedSize: size }, (error) => {
+        if (error) throw error
+      })
     })
   }
 
@@ -127,6 +134,18 @@ export class SettingsComponent implements OnInit, OnDestroy {
         title: 'Список проіндексованих документів',
         template: this.modal
       },
+    })
+  }
+
+  onChangeMode(mode) {
+    this.eS.mode = mode
+    const settingKey = 'search-settings'
+    this.eS.storage.get(settingKey, (error, settings: SearchSettings) => {
+      if (error) throw error
+
+      this.eS.storage.set(settingKey, { ...settings, mode }, (error) => {
+        if (error) throw error
+      })
     })
   }
 }
@@ -142,3 +161,5 @@ const getStatus = (value) => {
     return 'success'
   }
 }
+
+interface SearchSettings { separatedSize?: number, mode?: boolean }

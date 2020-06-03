@@ -19,11 +19,7 @@ import {
   NbThemeModule,
   NbSidebarModule,
   NbMenuModule,
-  NbLayoutModule,
-  NbButtonModule,
-  NbIconModule,
   NbInputModule,
-  NbSpinnerModule,
   NbTooltipModule, NbDialogModule,
 } from '@nebular/theme';
 
@@ -58,11 +54,7 @@ export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
         NbThemeModule.forRoot({ name: 'default' }),
         NbSidebarModule.forRoot(),
         NbMenuModule.forRoot(),
-        NbLayoutModule,
-        NbButtonModule,
-        NbIconModule,
         BrowserAnimationsModule,
-        NbSpinnerModule,
         NbInputModule,
         TranslateModule.forRoot({
             loader: {
@@ -72,8 +64,6 @@ export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
             }
         }),
         NbTooltipModule,
-      NbSidebarModule.forRoot(),
-      NbMenuModule.forRoot(),
       NbDialogModule.forRoot(),
     ],
   providers: [],

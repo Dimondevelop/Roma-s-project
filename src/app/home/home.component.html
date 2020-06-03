@@ -20,7 +20,7 @@
     <br>
     <nb-tabset *ngIf="searchResults" class="results-tabset">
       <nb-tab *ngFor="let results of searchResults; first as isFirst" [active]="isFirst" tabTitle="{{results.name}}">
-        <ng-container [ngSwitch]="results.document.length">
+        <ng-container [ngSwitch]="results.document?.length">
           <h5 *ngSwitchCase="0">Дублікатів не знайдено!</h5>
           <ng-container *ngSwitchDefault>
             <div *ngFor="let result of results.document">
